@@ -31,28 +31,11 @@ import {
 } from "@/components/ui/table";
 import { PersonaContext } from "@/components/layout/AppShell";
 import { initialApprovals, mockControls, mockCronSchedules } from "@/data/mockData";
-
-// 7-day operational throughput mock data
-const slaWeeklyTelemetry = [
-  { day: "Mon", total: 18, onTime: 16, breached: 2, rate: "88.9%" },
-  { day: "Tue", total: 24, onTime: 22, breached: 2, rate: "91.6%" },
-  { day: "Wed", total: 19, onTime: 18, breached: 1, rate: "94.7%" },
-  { day: "Thu", total: 28, onTime: 23, breached: 5, rate: "82.1%" }, // Breach spike
-  { day: "Fri", total: 22, onTime: 20, breached: 2, rate: "90.9%" },
-  { day: "Sat", total: 8, onTime: 8, breached: 0, rate: "100%" },
-  { day: "Sun", total: 6, onTime: 6, breached: 0, rate: "100%" },
-];
-
-const departmentBottlenecks = [
-  { dept: "Legal Review", avgDays: 3.8, status: "warning", barWidth: "90%" },
-  { dept: "Procurement / Finance", avgDays: 1.6, status: "normal", barWidth: "45%" },
-  { dept: "IT Security", avgDays: 0.7, status: "good", barWidth: "20%" },
-];
+import { SlaVelocityChart } from "@/components/charts/SlaVelocityChart";
 
 export default function DashboardPage() {
   const { persona } = useContext(PersonaContext);
   const [triageView, setTriageView] = useState<"summary" | "table">("summary");
-  const [hoveredBar, setHoveredBar] = useState<number | null>(null);
 
   const overdueCount = initialApprovals.filter((a) => a.isOverdue).length;
   const dueTodayCount = initialApprovals.filter((a) => a.status === "due_today").length;
@@ -265,116 +248,8 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* CARD 2: SLA VELOCITY & BOTTLENECK TELEMETRY (CHART VIEW) */}
-        <Card className="border-border shadow-2xs flex flex-col justify-between">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div>
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <BarChart2 className="size-3.5 text-muted-foreground" />
-                SLA Velocity &amp; Throughput
-              </CardTitle>
-              <CardDescription className="text-xs text-foreground font-medium mt-0.5">
-                7-day operational completion vs. breach distribution
-              </CardDescription>
-            </div>
-            <Link href="/insights">
-              <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground gap-1 px-1.5">
-                Deep Dive <ArrowRight className="size-3" />
-              </Button>
-            </Link>
-          </CardHeader>
-
-          <CardContent className="space-y-3 flex-1">
-            {/* 7-DAY MINI BAR CHART */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono">
-                <span>Daily Approvals Completed</span>
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1">
-                    <span className="size-2 rounded-xs bg-foreground" /> On-Time
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="size-2 rounded-xs bg-rose-500" /> Breached
-                  </span>
-                </div>
-              </div>
-
-              {/* Chart Canvas */}
-              <div className="grid grid-cols-7 gap-2 h-20 items-end pt-2 pb-1 border-b border-border/80">
-                {slaWeeklyTelemetry.map((item, idx) => {
-                  const maxTotal = 30;
-                  const onTimePx = Math.max(Math.round((item.onTime / maxTotal) * 44), 8);
-                  const breachedPx = item.breached > 0 ? Math.max(Math.round((item.breached / maxTotal) * 44), 6) : 0;
-                  const isHovered = hoveredBar === idx;
-
-                  return (
-                    <div
-                      key={item.day}
-                      className="group relative flex flex-col items-center justify-end h-full cursor-pointer"
-                      onMouseEnter={() => setHoveredBar(idx)}
-                      onMouseLeave={() => setHoveredBar(null)}
-                    >
-                      {/* Tooltip on hover */}
-                      {isHovered && (
-                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-30 whitespace-nowrap rounded-md border border-border bg-foreground px-2 py-1 text-[10px] font-mono text-background shadow-md">
-                          {item.day}: {item.onTime} on-time, {item.breached} breached ({item.rate})
-                        </div>
-                      )}
-
-                      {/* Stacked Bar with guaranteed pixel height & minHeight */}
-                      <div className="w-full h-14 flex flex-col justify-end gap-0.5 rounded-xs overflow-hidden">
-                        {item.breached > 0 && (
-                          <div
-                            style={{ height: `${breachedPx}px`, minHeight: "5px" }}
-                            className="w-full bg-rose-500 transition-all group-hover:opacity-85"
-                          />
-                        )}
-                        <div
-                          style={{ height: `${onTimePx}px`, minHeight: "8px" }}
-                          className="w-full bg-foreground transition-all group-hover:opacity-85"
-                        />
-                      </div>
-
-                      <span className="text-[10px] font-mono text-muted-foreground mt-1">
-                        {item.day}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Department Bottleneck Mini Telemetry */}
-            <div className="pt-1 space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                <span className="font-medium text-foreground">Cycle Time Bottleneck by Review Stage</span>
-                <span className="font-mono text-[10px]">Avg Days</span>
-              </div>
-              <div className="space-y-1">
-                {departmentBottlenecks.map((d) => (
-                  <div key={d.dept} className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground text-[11px] truncate w-40">{d.dept}</span>
-                    <div className="flex-1 mx-3 h-1.5 rounded-full bg-muted overflow-hidden">
-                      <div
-                        style={{ width: d.barWidth }}
-                        className={`h-full rounded-full ${
-                          d.status === "warning"
-                            ? "bg-amber-500"
-                            : d.status === "good"
-                            ? "bg-emerald-500"
-                            : "bg-foreground/70"
-                        }`}
-                      />
-                    </div>
-                    <span className="font-mono text-[11px] font-medium text-foreground whitespace-nowrap">
-                      {d.avgDays}d
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* CARD 2: SLA VELOCITY & BOTTLENECK TELEMETRY (MODULAR CHART COMPONENT) */}
+        <SlaVelocityChart />
 
         {/* CARD 3: CONTINUOUS CONTROLS HEALTH RADAR */}
         <Card className="border-border shadow-2xs">
