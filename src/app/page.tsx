@@ -18,6 +18,8 @@ import {
   SlidersHorizontal,
   BarChart2,
   CheckCircle2,
+  Play,
+  RotateCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -32,27 +34,33 @@ import {
 import { PersonaContext } from "@/components/layout/AppShell";
 import { initialApprovals, mockControls, mockCronSchedules } from "@/data/mockData";
 
-// 7-day operational throughput mock data
+// Weekly SLA telemetry data for the stacked bar chart
 const slaWeeklyTelemetry = [
-  { day: "Mon", total: 18, onTime: 16, breached: 2, rate: "88.9%" },
-  { day: "Tue", total: 24, onTime: 22, breached: 2, rate: "91.6%" },
-  { day: "Wed", total: 19, onTime: 18, breached: 1, rate: "94.7%" },
-  { day: "Thu", total: 28, onTime: 23, breached: 5, rate: "82.1%" }, // Breach spike
-  { day: "Fri", total: 22, onTime: 20, breached: 2, rate: "90.9%" },
-  { day: "Sat", total: 8, onTime: 8, breached: 0, rate: "100%" },
-  { day: "Sun", total: 6, onTime: 6, breached: 0, rate: "100%" },
+  { day: "Mon", onTime: 18, breached: 2, total: 20, rate: "90%" },
+  { day: "Tue", onTime: 24, breached: 1, total: 25, rate: "96%" },
+  { day: "Wed", onTime: 21, breached: 3, total: 24, rate: "87.5%" },
+  { day: "Thu", onTime: 29, breached: 2, total: 31, rate: "93.5%" },
+  { day: "Fri", onTime: 22, breached: 1, total: 23, rate: "95.6%" },
+  { day: "Sat", onTime: 8, breached: 0, total: 8, rate: "100%" },
+  { day: "Sun", onTime: 6, breached: 0, total: 6, rate: "100%" },
 ];
 
 const departmentBottlenecks = [
-  { dept: "Legal Review", avgDays: 3.8, status: "warning", barWidth: "90%" },
-  { dept: "Procurement / Finance", avgDays: 1.6, status: "normal", barWidth: "45%" },
-  { dept: "IT Security", avgDays: 0.7, status: "good", barWidth: "20%" },
+  { dept: "Legal Review", avgDays: 3.8, barWidth: "90%", status: "warning" },
+  { dept: "Procurement / Finance", avgDays: 1.6, barWidth: "45%", status: "neutral" },
+  { dept: "IT Security", avgDays: 0.7, barWidth: "20%", status: "good" },
 ];
 
 export default function DashboardPage() {
   const { persona } = useContext(PersonaContext);
   const [triageView, setTriageView] = useState<"summary" | "table">("summary");
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
 
   const overdueCount = initialApprovals.filter((a) => a.isOverdue).length;
   const dueTodayCount = initialApprovals.filter((a) => a.status === "due_today").length;
@@ -61,8 +69,494 @@ export default function DashboardPage() {
   // Urgent subset for the table view
   const urgentApprovals = initialApprovals.filter((a) => a.isOverdue || a.status === "due_today");
 
+  /* --- WIDGET 1: PENDING APPROVALS TRIAGE --- */
+  const renderApprovalsWidget = (isHero: boolean = false) => (
+    <Card className={`border-border shadow-2xs flex flex-col justify-between ${isHero ? "ring-1 ring-foreground/20" : ""}`}>
+      <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <div>
+          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <Clock className="size-3.5 text-muted-foreground" />
+            Pending Approvals Triage
+            {isHero && <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-foreground text-background">HERO</span>}
+          </CardTitle>
+          <CardDescription className="text-xs text-foreground font-medium mt-0.5">
+            {triageView === "summary"
+              ? "Multi-tier sign-offs awaiting review"
+              : `Actionable Queue (${urgentApprovals.length} urgent items)`}
+          </CardDescription>
+        </div>
+
+        {/* View Switcher: Summary Tiles vs Data Table */}
+        <div className="flex items-center gap-1.5">
+          <div className="inline-flex rounded-md border border-border bg-muted/40 p-0.5 text-xs">
+            <button
+              onClick={() => setTriageView("summary")}
+              className={`rounded px-2 py-0.5 text-[11px] font-medium transition-all flex items-center gap-1 ${
+                triageView === "summary"
+                  ? "bg-background text-foreground shadow-2xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              title="Summary KPI Grid"
+            >
+              <LayoutGrid className="size-3" />
+              <span>Tiles</span>
+            </button>
+            <button
+              onClick={() => setTriageView("table")}
+              className={`rounded px-2 py-0.5 text-[11px] font-medium transition-all flex items-center gap-1 ${
+                triageView === "table"
+                  ? "bg-background text-foreground shadow-2xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              title="Detailed Table View"
+            >
+              <TableIcon className="size-3" />
+              <span>Table</span>
+            </button>
+          </div>
+
+          <Link href="/inbox">
+            <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground gap-1 px-1.5">
+              Inbox <ArrowRight className="size-3" />
+            </Button>
+          </Link>
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex-1">
+        {triageView === "summary" ? (
+          <div className="grid grid-cols-3 gap-2.5">
+            <div className="rounded-lg border border-border bg-card p-3 text-left space-y-1">
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                <span className="size-1.5 rounded-full bg-rose-500" />
+                <span>P1 Overdue</span>
+              </div>
+              <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
+                {overdueCount}
+              </div>
+              <div className="text-[10px] text-rose-600 font-medium">SLA Breached</div>
+            </div>
+
+            <div className="rounded-lg border border-border bg-card p-3 text-left space-y-1">
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                <span className="size-1.5 rounded-full bg-amber-500" />
+                <span>P2 Due Today</span>
+              </div>
+              <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
+                {dueTodayCount}
+              </div>
+              <div className="text-[10px] text-muted-foreground">&lt; 24h Remaining</div>
+            </div>
+
+            <div className="rounded-lg border border-border bg-card p-3 text-left space-y-1">
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                <span className="size-1.5 rounded-full bg-muted-foreground/40" />
+                <span>P3 Normal</span>
+              </div>
+              <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
+                8
+              </div>
+              <div className="text-[10px] text-muted-foreground">Standard SLA</div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40 text-[11px]">
+                  <TableHead className="h-7 font-mono font-medium">ID</TableHead>
+                  <TableHead className="h-7 font-medium">Request</TableHead>
+                  <TableHead className="h-7 font-medium">SLA Status</TableHead>
+                  <TableHead className="h-7 font-mono text-right font-medium">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {urgentApprovals.slice(0, 4).map((item) => (
+                  <TableRow key={item.id} className="text-xs hover:bg-muted/30">
+                    <TableCell className="py-2 font-mono text-[11px] text-muted-foreground whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`size-1.5 rounded-full ${
+                            item.priority === "P1" ? "bg-rose-500" : "bg-amber-500"
+                          }`}
+                        />
+                        <span>{item.id}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-2 max-w-[180px]">
+                      <div className="truncate font-medium text-foreground">{item.title}</div>
+                      <div className="text-[10px] text-muted-foreground truncate">{item.requester.name}</div>
+                    </TableCell>
+                    <TableCell className="py-2 whitespace-nowrap">
+                      <span
+                        className={`text-[11px] font-mono ${
+                          item.isOverdue ? "text-rose-600 font-semibold" : "text-amber-600"
+                        }`}
+                      >
+                        {item.slaCountdown}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-2 font-mono text-right text-[11px] text-foreground font-medium whitespace-nowrap">
+                      {item.amount || "—"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  /* --- WIDGET 2: SLA VELOCITY & BOTTLENECK TELEMETRY --- */
+  const renderVelocityWidget = () => (
+    <Card className="border-border shadow-2xs flex flex-col justify-between">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <BarChart2 className="size-3.5 text-muted-foreground" />
+            SLA Velocity &amp; Throughput
+          </CardTitle>
+          <CardDescription className="text-xs text-foreground font-medium mt-0.5">
+            7-day operational completion vs. breach distribution
+          </CardDescription>
+        </div>
+        <Link href="/insights">
+          <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground gap-1 px-1.5">
+            Deep Dive <ArrowRight className="size-3" />
+          </Button>
+        </Link>
+      </CardHeader>
+
+      <CardContent className="space-y-3 flex-1">
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono">
+            <span>Daily Approvals Completed</span>
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1">
+                <span className="size-2 rounded-xs bg-foreground" /> On-Time
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="size-2 rounded-xs bg-rose-500" /> Breached
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-7 gap-2 h-20 items-end pt-2 pb-1 border-b border-border/80">
+            {slaWeeklyTelemetry.map((item, idx) => {
+              const maxTotal = 30;
+              const onTimeHeight = (item.onTime / maxTotal) * 100;
+              const breachedHeight = (item.breached / maxTotal) * 100;
+              const isHovered = hoveredBar === idx;
+
+              return (
+                <div
+                  key={item.day}
+                  className="group relative flex flex-col items-center justify-end h-full cursor-pointer"
+                  onMouseEnter={() => setHoveredBar(idx)}
+                  onMouseLeave={() => setHoveredBar(null)}
+                >
+                  {isHovered && (
+                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-30 whitespace-nowrap rounded-md border border-border bg-foreground px-2 py-1 text-[10px] font-mono text-background shadow-md">
+                      {item.day}: {item.onTime} on-time, {item.breached} breached ({item.rate})
+                    </div>
+                  )}
+
+                  <div className="w-full h-12 flex flex-col justify-end gap-0.5 rounded-xs overflow-hidden">
+                    {item.breached > 0 && (
+                      <div
+                        style={{ height: `${Math.max(breachedHeight, 8)}%` }}
+                        className="w-full bg-rose-500 transition-all group-hover:opacity-80"
+                      />
+                    )}
+                    <div
+                      style={{ height: `${Math.max(onTimeHeight, 10)}%` }}
+                      className="w-full bg-foreground transition-all group-hover:opacity-80"
+                    />
+                  </div>
+
+                  <span className="text-[10px] font-mono text-muted-foreground mt-1">
+                    {item.day}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="pt-1 space-y-1.5">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+            <span className="font-medium text-foreground">Cycle Time Bottleneck by Review Stage</span>
+            <span className="font-mono text-[10px]">Avg Days</span>
+          </div>
+          <div className="space-y-1">
+            {departmentBottlenecks.map((d) => (
+              <div key={d.dept} className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground text-[11px] truncate w-40">{d.dept}</span>
+                <div className="flex-1 mx-3 h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    style={{ width: d.barWidth }}
+                    className={`h-full rounded-full ${
+                      d.status === "warning"
+                        ? "bg-amber-500"
+                        : d.status === "good"
+                        ? "bg-emerald-500"
+                        : "bg-foreground/70"
+                    }`}
+                  />
+                </div>
+                <span className="font-mono text-[11px] font-medium text-foreground whitespace-nowrap">
+                  {d.avgDays}d
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  /* --- WIDGET 3: CONTINUOUS CONTROLS HEALTH RADAR --- */
+  const renderControlsWidget = (isHero: boolean = false) => (
+    <Card className={`border-border shadow-2xs flex flex-col justify-between ${isHero ? "ring-1 ring-foreground/20" : ""}`}>
+      <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <div>
+          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <ShieldAlert className="size-3.5 text-muted-foreground" />
+            Continuous Controls Health Radar
+            {isHero && <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-foreground text-background">HERO</span>}
+          </CardTitle>
+          <CardDescription className="text-xs text-foreground font-medium mt-0.5">
+            Horizon foresight into expiring audits &amp; certifications
+          </CardDescription>
+        </div>
+        <Link href="/compliance">
+          <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground gap-1 px-2">
+            Registry <ArrowRight className="size-3" />
+          </Button>
+        </Link>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="rounded-lg border border-border bg-card p-3 space-y-1">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+              <span className="font-medium flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-rose-500" />
+                ≤ 7 Days Expiry
+              </span>
+              <span className="font-mono text-[10px]">Critical</span>
+            </div>
+            <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
+              1 control
+            </div>
+            <p className="text-[11px] text-muted-foreground truncate">ISO27001 Access Review (6d)</p>
+          </div>
+
+          <div className="rounded-lg border border-border bg-card p-3 space-y-1">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+              <span className="font-medium flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-amber-500" />
+                30-Day Window
+              </span>
+              <span className="font-mono text-[10px]">Renewal</span>
+            </div>
+            <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
+              2 controls
+            </div>
+            <p className="text-[11px] text-muted-foreground truncate">SOC2 &amp; GDPR Retention</p>
+          </div>
+        </div>
+
+        {isHero && (
+          <div className="pt-1 border-t border-border space-y-1.5">
+            <span className="text-[11px] font-medium text-foreground">Actionable Controls Requiring Attention</span>
+            <div className="space-y-1">
+              {mockControls.slice(0, 2).map((c) => (
+                <div key={c.id} className="flex items-center justify-between text-xs p-1.5 rounded bg-muted/20 border border-border/60">
+                  <div className="flex items-center gap-2">
+                    <span className={`size-1.5 rounded-full ${c.daysRemaining <= 7 ? "bg-rose-500" : "bg-amber-500"}`} />
+                    <span className="font-mono text-[11px] font-medium text-foreground">{c.code}</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => showToast(`Initiated renewal workflow for ${c.code}`)}
+                    className="h-6 text-[10px] px-2"
+                  >
+                    Renew ({c.daysRemaining}d)
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  /* --- WIDGET 4: WORKFLOWS SUBMITTED (MY REQUESTS) --- */
+  const renderMyRequestsWidget = (isHero: boolean = false) => (
+    <Card className={`border-border shadow-2xs flex flex-col justify-between ${isHero ? "ring-1 ring-foreground/20" : ""}`}>
+      <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <div>
+          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <FileText className="size-3.5 text-muted-foreground" />
+            Workflows Submitted (My Requests)
+            {isHero && <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-foreground text-background">HERO</span>}
+          </CardTitle>
+          <CardDescription className="text-xs text-foreground font-medium mt-0.5">
+            My initiated requests &amp; live approval stages
+          </CardDescription>
+        </div>
+        <Link href="/workflows">
+          <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground gap-1 px-2">
+            Track <ArrowRight className="size-3" />
+          </Button>
+        </Link>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between rounded-md border border-border/80 bg-muted/20 px-3 py-2 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="size-1.5 rounded-full bg-foreground/60" />
+              <span className="font-medium text-foreground">In Review (Awaiting Reviewers)</span>
+            </div>
+            <span className="font-mono text-muted-foreground text-[11px]">2 active</span>
+          </div>
+
+          <div className="flex items-center justify-between rounded-md border border-border/80 bg-muted/20 px-3 py-2 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="size-1.5 rounded-full bg-foreground" />
+              <span className="font-medium text-foreground">Approved &amp; Executed (This Week)</span>
+            </div>
+            <span className="font-mono text-foreground font-semibold text-[11px]">5 completed</span>
+          </div>
+
+          <div className="flex items-center justify-between rounded-md border border-border/80 bg-muted/20 px-3 py-2 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="size-1.5 rounded-full bg-muted-foreground/40" />
+              <span className="font-medium text-foreground">Draft Pipelines &amp; Templates</span>
+            </div>
+            <span className="font-mono text-muted-foreground text-[11px]">1 draft</span>
+          </div>
+        </div>
+
+        {isHero && (
+          <div className="pt-2 border-t border-border space-y-1.5">
+            <span className="text-[11px] font-medium text-foreground">Live Pipeline Stages</span>
+            <div className="space-y-1 text-xs">
+              <div className="p-2 rounded border border-border bg-card flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-foreground">Software License — Datadog Enterprise APM</p>
+                  <p className="text-[10px] text-muted-foreground font-mono">Stage 2: DevOps Lead Sign-off • 4h remaining</p>
+                </div>
+                <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-muted">In Review</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  /* --- WIDGET 5: QUICK INITIATION SHORTCUTS --- */
+  const renderShortcutsWidget = (isHero: boolean = false) => (
+    <Card className={`border-border shadow-2xs flex flex-col justify-between ${isHero ? "ring-1 ring-foreground/20" : ""}`}>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <Zap className="size-3.5 text-muted-foreground" />
+          Quick Initiation Shortcuts
+          {isHero && <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-foreground text-background">HERO</span>}
+        </CardTitle>
+        <CardDescription className="text-xs text-foreground font-medium mt-0.5">
+          Launch operational workflows across 4 triggers
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/workflows">
+            <Button variant="outline" size="sm" className="h-7 rounded-md text-xs font-normal hover:bg-accent">
+              + Travel &amp; Expense
+            </Button>
+          </Link>
+          <Link href="/workflows">
+            <Button variant="outline" size="sm" className="h-7 rounded-md text-xs font-normal hover:bg-accent">
+              + IT Access Grant
+            </Button>
+          </Link>
+          <Link href="/workflows">
+            <Button variant="outline" size="sm" className="h-7 rounded-md text-xs font-normal hover:bg-accent">
+              + Vendor Onboarding
+            </Button>
+          </Link>
+          <Link href="/workflows">
+            <Button variant="secondary" size="sm" className="h-7 rounded-md text-xs font-medium">
+              Browse All 4 Triggers →
+            </Button>
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  /* --- WIDGET 6: BACKGROUND AUTOMATIONS & SWEEPS --- */
+  const renderAutomationsWidget = (isHero: boolean = false) => (
+    <Card className={`border-border shadow-2xs flex flex-col justify-between ${isHero ? "ring-1 ring-foreground/20" : ""}`}>
+      <CardHeader className="pb-3 flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <Activity className="size-3.5 text-muted-foreground" />
+            Background Automations &amp; Sweeps
+            {isHero && <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-foreground text-background">HERO</span>}
+          </CardTitle>
+          <CardDescription className="text-xs text-foreground font-medium mt-0.5">
+            Scheduled cron sweeps &amp; zero-noise telemetry
+          </CardDescription>
+        </div>
+        <span className="text-[10px] font-mono text-muted-foreground">No Noise Active</span>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="space-y-2">
+          {mockCronSchedules.slice(0, 2).map((c) => (
+            <div key={c.id} className="flex items-center justify-between text-xs py-1 border-b border-border/50 last:border-0">
+              <div className="flex items-center gap-2">
+                <span className="size-1.5 rounded-full bg-foreground" />
+                <span className="font-mono text-foreground font-medium">{c.name}</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <span className="font-mono text-[11px]">{c.lastRunTime}</span>
+                <span className="inline-flex h-5 items-center rounded border border-border bg-muted/50 px-1.5 text-[10px] font-mono font-medium text-foreground">
+                  Passed
+                </span>
+                {isHero && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => showToast(`Manually triggered: ${c.name} (Execution ID: RUN-${Date.now().toString().slice(-4)})`)}
+                    className="h-6 text-[10px] gap-1 px-1.5"
+                  >
+                    <Play className="size-2.5" /> Run Now
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="space-y-5 max-w-7xl mx-auto">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-20 right-8 z-50 flex items-center gap-2 rounded-md border border-border bg-foreground px-4 py-2.5 text-xs font-medium text-background shadow-lg animate-in slide-in-from-top-3 duration-200">
+          <CheckCircle2 className="size-4 text-emerald-400" />
+          {toastMessage}
+        </div>
+      )}
+
       {/* ZONE 1: URGENT CONTROLS & BREACH BAR */}
       <div className="rounded-xl border border-border bg-card p-3.5 shadow-2xs">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -119,427 +613,97 @@ export default function DashboardPage() {
           <Sparkles className="size-3 text-muted-foreground" />
           <span>
             Active layout optimized for: <strong className="font-medium text-foreground capitalize">{persona.replace("_", " ")}</strong>.
+            <span className="text-muted-foreground/80 ml-1.5 hidden sm:inline">
+              {persona === "approver" && "— Prioritizing SLA breach triage & pending sign-offs."}
+              {persona === "requester" && "— Prioritizing my submitted requests & quick initiation."}
+              {persona === "control_owner" && "— Prioritizing continuous controls radar & expiring audits."}
+              {persona === "automation_owner" && "— Prioritizing background cron sweeps & operational telemetry."}
+            </span>
           </span>
         </div>
         <span className="text-[11px] font-mono">Tier 1 Preset</span>
       </div>
 
-      {/* ZONE 2: PRIMARY 2x2 METRICS & TELEMETRY GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* CARD 1: PENDING APPROVALS TRIAGE (WITH SUMMARY & TABLE VIEW TOGGLE) */}
-        <Card className="border-border shadow-2xs flex flex-col justify-between">
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <div>
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Clock className="size-3.5 text-muted-foreground" />
-                Pending Approvals Triage
-              </CardTitle>
-              <CardDescription className="text-xs text-foreground font-medium mt-0.5">
-                {triageView === "summary"
-                  ? "Multi-tier sign-offs awaiting review"
-                  : `Actionable Queue (${urgentApprovals.length} urgent items)`}
-              </CardDescription>
-            </div>
+      {/* DYNAMICALLY REORDERED WIDGETS BASED ON PERSONA PERSPECTIVE */}
+      {persona === "approver" && (
+        <>
+          {/* Row 1: Approver Hero Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderApprovalsWidget(true)}
+            {renderVelocityWidget()}
+          </div>
+          {/* Row 2: Secondary Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderControlsWidget()}
+            {renderMyRequestsWidget()}
+          </div>
+          {/* Row 3: Tertiary Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderShortcutsWidget()}
+            {renderAutomationsWidget()}
+          </div>
+        </>
+      )}
 
-            {/* View Switcher: Summary Tiles vs Data Table */}
-            <div className="flex items-center gap-1.5">
-              <div className="inline-flex rounded-md border border-border bg-muted/40 p-0.5 text-xs">
-                <button
-                  onClick={() => setTriageView("summary")}
-                  className={`rounded px-2 py-0.5 text-[11px] font-medium transition-all flex items-center gap-1 ${
-                    triageView === "summary"
-                      ? "bg-background text-foreground shadow-2xs font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                  title="Summary KPI Grid"
-                >
-                  <LayoutGrid className="size-3" />
-                  <span>Tiles</span>
-                </button>
-                <button
-                  onClick={() => setTriageView("table")}
-                  className={`rounded px-2 py-0.5 text-[11px] font-medium transition-all flex items-center gap-1 ${
-                    triageView === "table"
-                      ? "bg-background text-foreground shadow-2xs font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                  title="Detailed Table View"
-                >
-                  <TableIcon className="size-3" />
-                  <span>Table</span>
-                </button>
-              </div>
+      {persona === "requester" && (
+        <>
+          {/* Row 1: Requester Hero Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderMyRequestsWidget(true)}
+            {renderShortcutsWidget(true)}
+          </div>
+          {/* Row 2: Secondary Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderVelocityWidget()}
+            {renderApprovalsWidget()}
+          </div>
+          {/* Row 3: Tertiary Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderControlsWidget()}
+            {renderAutomationsWidget()}
+          </div>
+        </>
+      )}
 
-              <Link href="/inbox">
-                <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground gap-1 px-1.5">
-                  Inbox <ArrowRight className="size-3" />
-                </Button>
-              </Link>
-            </div>
-          </CardHeader>
+      {persona === "control_owner" && (
+        <>
+          {/* Row 1: Control Owner Hero Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderControlsWidget(true)}
+            {renderVelocityWidget()}
+          </div>
+          {/* Row 2: Secondary Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderApprovalsWidget()}
+            {renderAutomationsWidget()}
+          </div>
+          {/* Row 3: Tertiary Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderMyRequestsWidget()}
+            {renderShortcutsWidget()}
+          </div>
+        </>
+      )}
 
-          <CardContent className="flex-1">
-            {triageView === "summary" ? (
-              /* VIEW A: SUMMARY TILES */
-              <div className="grid grid-cols-3 gap-2.5">
-                <div className="rounded-lg border border-border bg-card p-3 text-left space-y-1">
-                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-                    <span className="size-1.5 rounded-full bg-rose-500" />
-                    <span>P1 Overdue</span>
-                  </div>
-                  <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
-                    {overdueCount}
-                  </div>
-                  <div className="text-[10px] text-rose-600 font-medium">SLA Breached</div>
-                </div>
-
-                <div className="rounded-lg border border-border bg-card p-3 text-left space-y-1">
-                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-                    <span className="size-1.5 rounded-full bg-amber-500" />
-                    <span>P2 Due Today</span>
-                  </div>
-                  <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
-                    {dueTodayCount}
-                  </div>
-                  <div className="text-[10px] text-muted-foreground">&lt; 24h Remaining</div>
-                </div>
-
-                <div className="rounded-lg border border-border bg-card p-3 text-left space-y-1">
-                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-                    <span className="size-1.5 rounded-full bg-muted-foreground/40" />
-                    <span>P3 Normal</span>
-                  </div>
-                  <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
-                    8
-                  </div>
-                  <div className="text-[10px] text-muted-foreground">Standard SLA</div>
-                </div>
-              </div>
-            ) : (
-              /* VIEW B: HIGH-DENSITY TABLE VIEW */
-              <div className="rounded-lg border border-border overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40 text-[11px]">
-                      <TableHead className="h-7 font-mono font-medium">ID</TableHead>
-                      <TableHead className="h-7 font-medium">Request</TableHead>
-                      <TableHead className="h-7 font-medium">SLA Status</TableHead>
-                      <TableHead className="h-7 font-mono text-right font-medium">Amount</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {urgentApprovals.slice(0, 4).map((item) => (
-                      <TableRow key={item.id} className="text-xs hover:bg-muted/30">
-                        <TableCell className="py-2 font-mono text-[11px] text-muted-foreground whitespace-nowrap">
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className={`size-1.5 rounded-full ${
-                                item.priority === "P1" ? "bg-rose-500" : "bg-amber-500"
-                              }`}
-                            />
-                            <span>{item.id}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-2 max-w-[180px]">
-                          <div className="truncate font-medium text-foreground">{item.title}</div>
-                          <div className="text-[10px] text-muted-foreground truncate">{item.requester.name}</div>
-                        </TableCell>
-                        <TableCell className="py-2 whitespace-nowrap">
-                          <span
-                            className={`text-[11px] font-mono ${
-                              item.isOverdue ? "text-rose-600 font-semibold" : "text-amber-600"
-                            }`}
-                          >
-                            {item.slaCountdown}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-2 font-mono text-right text-[11px] text-foreground font-medium whitespace-nowrap">
-                          {item.amount || "—"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* CARD 2: SLA VELOCITY & BOTTLENECK TELEMETRY (CHART VIEW) */}
-        <Card className="border-border shadow-2xs flex flex-col justify-between">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div>
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <BarChart2 className="size-3.5 text-muted-foreground" />
-                SLA Velocity &amp; Throughput
-              </CardTitle>
-              <CardDescription className="text-xs text-foreground font-medium mt-0.5">
-                7-day operational completion vs. breach distribution
-              </CardDescription>
-            </div>
-            <Link href="/insights">
-              <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground gap-1 px-1.5">
-                Deep Dive <ArrowRight className="size-3" />
-              </Button>
-            </Link>
-          </CardHeader>
-
-          <CardContent className="space-y-3 flex-1">
-            {/* 7-DAY MINI BAR CHART */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono">
-                <span>Daily Approvals Completed</span>
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1">
-                    <span className="size-2 rounded-xs bg-foreground" /> On-Time
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="size-2 rounded-xs bg-rose-500" /> Breached
-                  </span>
-                </div>
-              </div>
-
-              {/* Chart Canvas */}
-              <div className="grid grid-cols-7 gap-2 h-20 items-end pt-2 pb-1 border-b border-border/80">
-                {slaWeeklyTelemetry.map((item, idx) => {
-                  const maxTotal = 30;
-                  const onTimeHeight = (item.onTime / maxTotal) * 100;
-                  const breachedHeight = (item.breached / maxTotal) * 100;
-                  const isHovered = hoveredBar === idx;
-
-                  return (
-                    <div
-                      key={item.day}
-                      className="group relative flex flex-col items-center justify-end h-full cursor-pointer"
-                      onMouseEnter={() => setHoveredBar(idx)}
-                      onMouseLeave={() => setHoveredBar(null)}
-                    >
-                      {/* Tooltip on hover */}
-                      {isHovered && (
-                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-30 whitespace-nowrap rounded-md border border-border bg-foreground px-2 py-1 text-[10px] font-mono text-background shadow-md">
-                          {item.day}: {item.onTime} on-time, {item.breached} breached ({item.rate})
-                        </div>
-                      )}
-
-                      {/* Stacked Bar */}
-                      <div className="w-full h-12 flex flex-col justify-end gap-0.5 rounded-xs overflow-hidden">
-                        {item.breached > 0 && (
-                          <div
-                            style={{ height: `${Math.max(breachedHeight, 8)}%` }}
-                            className="w-full bg-rose-500 transition-all group-hover:opacity-80"
-                          />
-                        )}
-                        <div
-                          style={{ height: `${Math.max(onTimeHeight, 10)}%` }}
-                          className="w-full bg-foreground transition-all group-hover:opacity-80"
-                        />
-                      </div>
-
-                      <span className="text-[10px] font-mono text-muted-foreground mt-1">
-                        {item.day}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Department Bottleneck Mini Telemetry */}
-            <div className="pt-1 space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                <span className="font-medium text-foreground">Cycle Time Bottleneck by Review Stage</span>
-                <span className="font-mono text-[10px]">Avg Days</span>
-              </div>
-              <div className="space-y-1">
-                {departmentBottlenecks.map((d) => (
-                  <div key={d.dept} className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground text-[11px] truncate w-40">{d.dept}</span>
-                    <div className="flex-1 mx-3 h-1.5 rounded-full bg-muted overflow-hidden">
-                      <div
-                        style={{ width: d.barWidth }}
-                        className={`h-full rounded-full ${
-                          d.status === "warning"
-                            ? "bg-amber-500"
-                            : d.status === "good"
-                            ? "bg-emerald-500"
-                            : "bg-foreground/70"
-                        }`}
-                      />
-                    </div>
-                    <span className="font-mono text-[11px] font-medium text-foreground whitespace-nowrap">
-                      {d.avgDays}d
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* CARD 3: CONTINUOUS CONTROLS HEALTH RADAR */}
-        <Card className="border-border shadow-2xs">
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <div>
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <ShieldAlert className="size-3.5 text-muted-foreground" />
-                Continuous Controls Health Radar
-              </CardTitle>
-              <CardDescription className="text-xs text-foreground font-medium mt-0.5">
-                Horizon foresight into expiring audits
-              </CardDescription>
-            </div>
-            <Link href="/compliance">
-              <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground gap-1 px-2">
-                Registry <ArrowRight className="size-3" />
-              </Button>
-            </Link>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="rounded-lg border border-border bg-card p-3 space-y-1">
-                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span className="font-medium flex items-center gap-1.5">
-                    <span className="size-1.5 rounded-full bg-rose-500" />
-                    ≤ 7 Days Expiry
-                  </span>
-                  <span className="font-mono text-[10px]">Critical</span>
-                </div>
-                <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
-                  1 control
-                </div>
-                <p className="text-[11px] text-muted-foreground truncate">ISO27001 Access Review (6d)</p>
-              </div>
-
-              <div className="rounded-lg border border-border bg-card p-3 space-y-1">
-                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span className="font-medium flex items-center gap-1.5">
-                    <span className="size-1.5 rounded-full bg-amber-500" />
-                    30-Day Window
-                  </span>
-                  <span className="font-mono text-[10px]">Renewal</span>
-                </div>
-                <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
-                  2 controls
-                </div>
-                <p className="text-[11px] text-muted-foreground truncate">SOC2 &amp; GDPR Retention</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* CARD 4: MY ACTIVE REQUESTS SUMMARY */}
-        <Card className="border-border shadow-2xs">
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <div>
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <FileText className="size-3.5 text-muted-foreground" />
-                Workflows Submitted
-              </CardTitle>
-              <CardDescription className="text-xs text-foreground font-medium mt-0.5">
-                My initiated requests &amp; live stages
-              </CardDescription>
-            </div>
-            <Link href="/workflows">
-              <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground gap-1 px-2">
-                Track <ArrowRight className="size-3" />
-              </Button>
-            </Link>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between rounded-md border border-border/80 bg-muted/20 px-3 py-2 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-foreground/60" />
-                  <span className="font-medium text-foreground">In Review (Awaiting Reviewers)</span>
-                </div>
-                <span className="font-mono text-muted-foreground text-[11px]">2 active</span>
-              </div>
-
-              <div className="flex items-center justify-between rounded-md border border-border/80 bg-muted/20 px-3 py-2 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-foreground" />
-                  <span className="font-medium text-foreground">Approved &amp; Executed (This Week)</span>
-                </div>
-                <span className="font-mono text-foreground font-semibold text-[11px]">5 completed</span>
-              </div>
-
-              <div className="flex items-center justify-between rounded-md border border-border/80 bg-muted/20 px-3 py-2 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-muted-foreground/40" />
-                  <span className="font-medium text-foreground">Draft Pipelines &amp; Templates</span>
-                </div>
-                <span className="font-mono text-muted-foreground text-[11px]">1 draft</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ZONE 3: SECONDARY WIDGETS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Quick Launch Shortcuts */}
-        <Card className="border-border shadow-2xs">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <Zap className="size-3.5 text-muted-foreground" />
-              Quick Initiation Shortcuts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              <Link href="/workflows">
-                <Button variant="outline" size="sm" className="h-7 rounded-md text-xs font-normal hover:bg-accent">
-                  + Travel &amp; Expense
-                </Button>
-              </Link>
-              <Link href="/workflows">
-                <Button variant="outline" size="sm" className="h-7 rounded-md text-xs font-normal hover:bg-accent">
-                  + IT Access Grant
-                </Button>
-              </Link>
-              <Link href="/workflows">
-                <Button variant="outline" size="sm" className="h-7 rounded-md text-xs font-normal hover:bg-accent">
-                  + Vendor Onboarding
-                </Button>
-              </Link>
-              <Link href="/workflows">
-                <Button variant="secondary" size="sm" className="h-7 rounded-md text-xs font-medium">
-                  Browse All 4 Triggers →
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Background Automations & Cron Monitor */}
-        <Card className="border-border shadow-2xs">
-          <CardHeader className="pb-3 flex flex-row items-center justify-between">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <Activity className="size-3.5 text-muted-foreground" />
-              Background Automations &amp; Sweeps
-            </CardTitle>
-            <span className="text-[10px] font-mono text-muted-foreground">No Noise Active</span>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {mockCronSchedules.slice(0, 2).map((c) => (
-                <div key={c.id} className="flex items-center justify-between text-xs py-1 border-b border-border/50 last:border-0">
-                  <div className="flex items-center gap-2">
-                    <span className="size-1.5 rounded-full bg-foreground" />
-                    <span className="font-mono text-foreground font-medium">{c.name}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-muted-foreground">
-                    <span className="font-mono text-[11px]">{c.lastRunTime}</span>
-                    <span className="inline-flex h-5 items-center rounded border border-border bg-muted/50 px-1.5 text-[10px] font-mono font-medium text-foreground">
-                      Passed
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {persona === "automation_owner" && (
+        <>
+          {/* Row 1: Automation Owner Hero Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderAutomationsWidget(true)}
+            {renderVelocityWidget()}
+          </div>
+          {/* Row 2: Secondary Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderControlsWidget()}
+            {renderApprovalsWidget()}
+          </div>
+          {/* Row 3: Tertiary Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderShortcutsWidget()}
+            {renderMyRequestsWidget()}
+          </div>
+        </>
+      )}
     </div>
   );
 }
