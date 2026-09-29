@@ -293,20 +293,20 @@ export default function InsightsPage() {
             <div className="grid grid-cols-4 gap-4 h-36 items-end pt-3 pb-1 border-b border-border">
               {weeklyVolumeTelemetry.map((item) => {
                 const maxVol = 130;
-                const onTimeH = (item.onTime / maxVol) * 100;
-                const breachedH = (item.breached / maxVol) * 100;
+                const onTimePx = Math.max(Math.round((item.onTime / maxVol) * 80), 12);
+                const breachedPx = item.breached > 0 ? Math.max(Math.round((item.breached / maxVol) * 80), 8) : 0;
 
                 return (
                   <div key={item.week} className="flex flex-col items-center justify-end h-full group">
                     <div className="w-full h-24 flex flex-col justify-end gap-0.5 rounded-xs overflow-hidden">
                       {item.breached > 0 && (
                         <div
-                          style={{ height: `${breachedH}%` }}
+                          style={{ height: `${breachedPx}px`, minHeight: "6px" }}
                           className="w-full bg-rose-500 transition-all group-hover:opacity-85"
                         />
                       )}
                       <div
-                        style={{ height: `${onTimeH}%` }}
+                        style={{ height: `${onTimePx}px`, minHeight: "10px" }}
                         className="w-full bg-foreground transition-all group-hover:opacity-85"
                       />
                     </div>
