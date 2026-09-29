@@ -40,7 +40,11 @@ export const departmentBottlenecks = [
   { dept: "IT Security", avgDays: 0.7, status: "good", barWidth: "20%" },
 ];
 
-export function SlaVelocityChart() {
+export interface SlaVelocityChartProps {
+  badgeLabel?: string;
+}
+
+export function SlaVelocityChart({ badgeLabel }: SlaVelocityChartProps = {}) {
   const [chartMode, setChartMode] = useState<"wave" | "bars">("wave");
   const [hoveredIdx, setHoveredIdx] = useState<number>(3); // Default to Thu spike
 
@@ -75,13 +79,18 @@ export function SlaVelocityChart() {
     <Card className="border-border shadow-2xs flex flex-col justify-between">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
-          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 flex-wrap">
             {chartMode === "wave" ? (
               <TrendingUp className="size-3.5 text-muted-foreground" />
             ) : (
               <BarChart2 className="size-3.5 text-muted-foreground" />
             )}
-            SLA Velocity &amp; Throughput
+            <span>SLA Velocity &amp; Throughput</span>
+            {badgeLabel && (
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-accent text-foreground font-semibold border border-border">
+                {badgeLabel}
+              </span>
+            )}
           </CardTitle>
           <CardDescription className="text-xs text-foreground font-medium mt-0.5">
             7-day operational completion vs. breach distribution

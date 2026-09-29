@@ -226,14 +226,7 @@ export default function DashboardPage() {
 
   // WIDGET 2: SLA VELOCITY & BOTTLENECK CHART
   const renderVelocityWidget = (badgeLabel?: string) => (
-    <div key="velocity" className="relative">
-      <SlaVelocityChart />
-      {badgeLabel && (
-        <span className="absolute top-4 right-28 text-[10px] font-mono px-1.5 py-0.2 rounded bg-accent text-foreground font-semibold border border-border hidden sm:inline">
-          {badgeLabel}
-        </span>
-      )}
-    </div>
+    <SlaVelocityChart key="velocity" badgeLabel={badgeLabel} />
   );
 
   // WIDGET 3: CONTINUOUS CONTROLS HEALTH RADAR
