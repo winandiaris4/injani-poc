@@ -322,15 +322,15 @@ export default function DashboardPage() {
                       )}
 
                       {/* Stacked Bar */}
-                      <div className="w-full flex flex-col justify-end gap-0.5 rounded-xs overflow-hidden">
+                      <div className="w-full h-12 flex flex-col justify-end gap-0.5 rounded-xs overflow-hidden">
                         {item.breached > 0 && (
                           <div
-                            style={{ height: `${Math.max(breachedHeight, 4)}%` }}
+                            style={{ height: `${Math.max(breachedHeight, 8)}%` }}
                             className="w-full bg-rose-500 transition-all group-hover:opacity-80"
                           />
                         )}
                         <div
-                          style={{ height: `${Math.max(onTimeHeight, 6)}%` }}
+                          style={{ height: `${Math.max(onTimeHeight, 10)}%` }}
                           className="w-full bg-foreground transition-all group-hover:opacity-80"
                         />
                       </div>
