@@ -46,41 +46,41 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5 w-full">
-      {/* ZONE 1: URGENT CONTROLS & BREACH BAR */}
-      <div className="rounded-xl border border-border bg-card p-3.5 shadow-2xs">
+      {/* ZONE 1: URGENT CONTROLS & BREACH BAR (MISSION-CONTROL OBSIDIAN HIGHLIGHT) */}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-100 p-3.5 shadow-md transition-all">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-foreground border border-border">
-              <AlertCircle className="size-3.5 text-foreground" />
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-zinc-900 text-rose-400 border border-zinc-800">
+              <AlertCircle className="size-3.5 text-rose-400" />
             </div>
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 font-mono">
                   Zone 1 Guardrail
                 </span>
-                <span className="text-[10px] font-mono text-muted-foreground border border-border px-1.5 py-0.2 rounded bg-muted/50">
+                <span className="text-[10px] font-mono text-zinc-300 border border-zinc-800 px-1.5 py-0.5 rounded bg-zinc-900/80">
                   Continuous Urgency
                 </span>
               </div>
-              <div className="flex flex-wrap items-center gap-3 text-xs text-foreground">
+              <div className="flex flex-wrap items-center gap-3 text-xs">
                 <Link
                   href="/inbox"
-                  className="flex items-center gap-1.5 font-medium hover:underline text-foreground"
+                  className="flex items-center gap-1.5 font-medium hover:underline text-zinc-100"
                 >
-                  <span className="size-1.5 rounded-full bg-rose-500 animate-pulse" />
-                  <span className="font-semibold">{overdueCount} approvals overdue (P1)</span>
-                  <span className="text-muted-foreground font-normal">— CapEx &amp; Cloud Security</span>
+                  <span className="size-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.9)]" />
+                  <span className="font-semibold text-rose-300">{overdueCount} approvals overdue (P1)</span>
+                  <span className="text-zinc-400 font-normal">— CapEx &amp; Cloud Security</span>
                 </Link>
-                <span className="text-muted-foreground/40">•</span>
+                <span className="text-zinc-600">•</span>
                 <Link
                   href="/compliance"
-                  className="flex items-center gap-1.5 font-medium hover:underline text-foreground"
+                  className="flex items-center gap-1.5 font-medium hover:underline text-zinc-100"
                 >
-                  <span className="size-1.5 rounded-full bg-amber-500" />
-                  <span>
-                    {criticalControls[0]?.code} expires in <strong className="font-semibold">{criticalControls[0]?.daysRemaining}d</strong>
+                  <span className="size-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]" />
+                  <span className="text-zinc-200">
+                    {criticalControls[0]?.code} expires in <strong className="font-semibold text-amber-300">{criticalControls[0]?.daysRemaining}d</strong>
                   </span>
-                  <span className="text-muted-foreground font-normal">(ISO27001 Access)</span>
+                  <span className="text-zinc-400 font-normal">(ISO27001 Access)</span>
                 </Link>
               </div>
             </div>
@@ -88,8 +88,12 @@ export default function DashboardPage() {
 
           <div className="flex items-center gap-2">
             <Link href="/inbox">
-              <Button size="sm" variant="default" className="h-7 text-xs gap-1.5 px-3">
-                Triage Urgent ({overdueCount}) <ArrowRight className="size-3" />
+              <Button
+                size="sm"
+                className="h-7 text-xs gap-1.5 px-3 bg-white text-zinc-950 hover:bg-zinc-100 hover:text-black font-semibold border-0 shadow-xs transition-colors"
+              >
+                <span>Triage Urgent ({overdueCount})</span>
+                <ArrowRight className="size-3 text-zinc-950" />
               </Button>
             </Link>
           </div>
