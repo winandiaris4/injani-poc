@@ -2,21 +2,20 @@
 
 import React, { useState } from "react";
 import {
-  GitBranch,
-  Play,
+  FileText,
   Clock,
   Radio,
   Zap,
   CheckCircle2,
-  AlertTriangle,
   Plus,
   RefreshCw,
   Server,
   Layers,
   Search,
-  ExternalLink
+  ExternalLink,
+  ArrowRight,
+  Play
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { mockWorkflowCatalog, mockCronSchedules } from "@/data/mockData";
@@ -32,7 +31,7 @@ export default function WorkflowsPage() {
   };
 
   const handleRunNow = (cronId: string, name: string) => {
-    showToast(`Immediate trigger sent: '${name}' is executing now without altering schedule!`);
+    showToast(`Immediate trigger sent: '${name}' is executing now.`);
     setCronList((prev) =>
       prev.map((c) => (c.id === cronId ? { ...c, lastRunStatus: "running" as const, lastRunTime: "Just now" } : c))
     );
@@ -46,102 +45,109 @@ export default function WorkflowsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-5">
       {/* Toast Alert */}
       {toastMessage && (
-        <div className="fixed top-20 right-8 z-50 flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-xs font-semibold text-white shadow-xl animate-in slide-in-from-top-3 duration-200">
-          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+        <div className="fixed top-16 right-6 z-50 flex items-center gap-2 rounded-lg border border-border bg-foreground px-4 py-2.5 text-xs font-medium text-background shadow-xl animate-in slide-in-from-top-2 duration-150">
+          <CheckCircle2 className="size-4 text-emerald-400" />
           {toastMessage}
         </div>
       )}
 
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">
             Workflow Initiation Catalog
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Discover, launch, and configure workflows across 4 distinct operational triggers.
           </p>
         </div>
 
-        <Button size="sm" className="text-xs gap-1.5 bg-indigo-600 hover:bg-indigo-700">
-          <Plus className="h-3.5 w-3.5" /> Create New Workflow
+        <Button size="sm" variant="default" className="text-xs gap-1.5 h-8">
+          <Plus className="size-3.5" /> Create New Workflow
         </Button>
       </div>
 
-      {/* 4 Trigger Types Segmented Switcher */}
-      <div className="flex rounded-xl bg-slate-200/80 p-1 text-xs font-semibold max-w-2xl">
+      {/* 4 Trigger Types Segmented Switcher (Minimalist Tab Bar) */}
+      <div className="inline-flex rounded-lg border border-border bg-muted/40 p-1 text-xs">
         {[
-          { id: "manual" as const, label: "📝 Manual Forms (On-Demand)", count: "12" },
-          { id: "cron" as const, label: "⏰ Scheduled / Cron Sweeps", count: "4" },
-          { id: "webhook" as const, label: "🔗 Webhook Triggers", count: "3" },
-          { id: "one_time" as const, label: "⚡ One-Time Pipelines", count: "2" }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 rounded-lg py-2 text-center transition-all flex items-center justify-center gap-1.5 ${
-              activeTab === tab.id
-                ? "bg-white text-slate-900 shadow-xs font-bold"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <span>{tab.label}</span>
-          </button>
-        ))}
+          { id: "manual" as const, label: "Manual Forms", icon: FileText, count: "4" },
+          { id: "cron" as const, label: "Scheduled Sweeps", icon: Clock, count: "4" },
+          { id: "webhook" as const, label: "Webhook Triggers", icon: Radio, count: "3" },
+          { id: "one_time" as const, label: "One-Time Pipelines", icon: Zap, count: "2" },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all flex items-center gap-2 ${
+                isActive
+                  ? "bg-background text-foreground shadow-2xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Icon className="size-3.5" />
+              <span>{tab.label}</span>
+              <span className="font-mono text-[10px] text-muted-foreground/80">({tab.count})</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* TAB 1: MANUAL (Form-based Requests) */}
       {activeTab === "manual" && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>Form-based human-in-the-loop workflows with multi-tier approval chains and strict SLA policies.</span>
-            <span className="font-semibold text-slate-700">Showing 4 core templates</span>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Human-in-the-loop workflows with multi-tier approval chains and strict SLA policies.</span>
+            <span className="font-mono text-[11px]">Showing 4 core templates</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {mockWorkflowCatalog.map((wf) => (
-              <Card key={wf.id} className="border-slate-200/80 hover:border-indigo-400 transition-all hover:shadow-sm">
+              <Card key={wf.id} className="border-border shadow-2xs hover:border-foreground/30 transition-colors">
                 <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <Badge variant="secondary" className="text-[10px] mb-1.5 font-bold text-slate-600">
-                        {wf.department}
-                      </Badge>
-                      <CardTitle className="text-sm font-bold text-slate-900">{wf.name}</CardTitle>
-                    </div>
-                    <Badge variant="outline" className="text-[10px]">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border/50">
+                      {wf.department}
+                    </span>
+                    <span className="font-mono text-[11px] text-muted-foreground">
                       {wf.stepsCount} Approval Steps
-                    </Badge>
+                    </span>
                   </div>
-                  <CardDescription className="text-xs line-clamp-2 mt-1">
+                  <CardTitle className="text-sm font-semibold text-foreground mt-2">
+                    {wf.name}
+                  </CardTitle>
+                  <CardDescription className="text-xs text-muted-foreground leading-relaxed">
                     {wf.description}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="grid grid-cols-3 gap-2 rounded-lg bg-slate-50 p-2.5 text-center text-xs mb-3">
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-3 gap-2 rounded-md border border-border/60 bg-muted/20 p-2.5 text-center text-xs">
                     <div>
-                      <span className="text-[10px] text-slate-400 uppercase">Policy SLA</span>
-                      <p className="font-semibold text-slate-700">{wf.slaPerStep}</p>
+                      <span className="text-[10px] uppercase font-mono text-muted-foreground block">Policy SLA</span>
+                      <span className="font-mono font-semibold text-foreground text-xs mt-0.5 block">{wf.slaPerStep}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 uppercase">Avg Duration</span>
-                      <p className="font-semibold text-slate-700">{wf.avgDuration}</p>
+                      <span className="text-[10px] uppercase font-mono text-muted-foreground block">Avg Duration</span>
+                      <span className="font-mono font-semibold text-foreground text-xs mt-0.5 block">{wf.avgDuration}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 uppercase">Usage</span>
-                      <p className="font-semibold text-indigo-600">{wf.monthlyUsage}× /mo</p>
+                      <span className="text-[10px] uppercase font-mono text-muted-foreground block">Usage</span>
+                      <span className="font-mono font-semibold text-foreground text-xs mt-0.5 block">{wf.monthlyUsage}/mo</span>
                     </div>
                   </div>
 
                   <Button
                     size="sm"
-                    className="w-full text-xs gap-1.5 bg-slate-900 hover:bg-slate-800"
-                    onClick={() => showToast(`Initiating workflow modal: ${wf.name}`)}
+                    variant="outline"
+                    className="w-full text-xs h-8 gap-1.5 font-medium hover:bg-accent text-foreground"
+                    onClick={() => showToast(`Initiation form loaded for: ${wf.name}`)}
                   >
-                    <Play className="h-3.5 w-3.5 fill-current" /> Start Request
+                    <Play className="size-3 fill-current" /> Start Request
                   </Button>
                 </CardContent>
               </Card>
@@ -150,112 +156,113 @@ export default function WorkflowsPage() {
         </div>
       )}
 
-      {/* TAB 2: SCHEDULED / CRON */}
+      {/* TAB 2: CRON SCHEDULES */}
       {activeTab === "cron" && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>Automated recurring routines such as midnight data integrity sweeps and compliance reconciliations.</span>
-            <Button size="sm" variant="outline" className="text-xs gap-1">
-              <Plus className="h-3 w-3" /> New Cron Schedule
-            </Button>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Automated sweeps running on background recurring cron expressions without human initiation.</span>
+            <span className="font-mono text-[11px]">{cronList.length} scheduled jobs</span>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-xs">
-            <table className="w-full text-left text-xs">
-              <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold text-slate-500">
-                <tr>
-                  <th className="p-3.5">Job Name</th>
-                  <th className="p-3.5">Cron Syntax & Frequency</th>
-                  <th className="p-3.5">Next Run</th>
-                  <th className="p-3.5">Last Run</th>
-                  <th className="p-3.5">Status</th>
-                  <th className="p-3.5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {cronList.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="p-3.5 font-bold font-mono text-slate-900">{c.name}</td>
-                    <td className="p-3.5">
-                      <code className="rounded bg-slate-100 px-1.5 py-0.5 text-indigo-700 font-bold">{c.syntax}</code>
-                      <span className="block text-[11px] text-slate-500 mt-0.5">{c.frequency}</span>
-                    </td>
-                    <td className="p-3.5 text-slate-700">{c.nextRun}</td>
-                    <td className="p-3.5">
-                      <span className="flex items-center gap-1.5 text-slate-600">
-                        {c.lastRunStatus === "success" && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />}
-                        {c.lastRunStatus === "failed" && <span className="h-1.5 w-1.5 rounded-full bg-red-500" />}
-                        {c.lastRunStatus === "running" && <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />}
-                        {c.lastRunTime}
-                      </span>
-                    </td>
-                    <td className="p-3.5">
-                      <Badge variant={c.isActive ? "default" : "secondary"}>
-                        {c.isActive ? "Active" : "Paused"}
-                      </Badge>
-                    </td>
-                    <td className="p-3.5 text-right space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-[11px] gap-1 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
-                        onClick={() => handleRunNow(c.id, c.name)}
-                      >
-                        <Zap className="h-3 w-3 text-amber-600 fill-amber-500" /> Run Now
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 text-[11px]"
-                        onClick={() => handleToggleCron(c.id)}
-                      >
-                        {c.isActive ? "Pause" : "Resume"}
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="divide-y divide-border rounded-xl border border-border bg-card shadow-2xs overflow-hidden">
+            {cronList.map((cron) => (
+              <div key={cron.id} className="p-4 flex flex-wrap items-center justify-between gap-4 hover:bg-muted/20 transition-colors">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-semibold text-foreground">{cron.name}</span>
+                    <span className="font-mono text-[11px] rounded bg-muted px-2 py-0.5 text-muted-foreground border border-border">
+                      {cron.syntax}
+                    </span>
+                    <span className="text-xs text-muted-foreground font-mono">({cron.frequency})</span>
+                  </div>
+                  <div className="flex items-center gap-4 text-[11px] text-muted-foreground font-mono pt-1">
+                    <span>Next execution: <strong className="text-foreground">{cron.nextRun}</strong></span>
+                    <span>•</span>
+                    <span>Last run: {cron.lastRunTime} ({cron.lastRunStatus})</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs font-mono gap-1.5"
+                    onClick={() => handleRunNow(cron.id, cron.name)}
+                  >
+                    <RefreshCw className="size-3" /> Run Now
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={cron.isActive ? "default" : "secondary"}
+                    className="h-7 text-xs font-mono"
+                    onClick={() => handleToggleCron(cron.id)}
+                  >
+                    {cron.isActive ? "Active" : "Paused"}
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* TAB 3: WEBHOOK */}
+      {/* TAB 3: WEBHOOKS */}
       {activeTab === "webhook" && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>Workflows listening for external API triggers (ERP invoices, cloud security alerts, Git commits).</span>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Inbound HTTP event receivers from external systems (GitHub, Jira, AWS GuardDuty).</span>
+            <span className="font-mono text-[11px]">3 Active Endpoints</span>
           </div>
 
-          <div className="space-y-3">
+          <div className="divide-y divide-border rounded-xl border border-border bg-card shadow-2xs overflow-hidden">
             {[
               {
-                name: "ERP Overdue Invoice Payment Escalation",
-                source: "SAP S/4HANA / Odoo Webhook",
-                endpoint: "POST /api/v1/webhooks/erp/unpaid-invoices",
-                lastTriggered: "42m ago",
-                eventsCount: "128 events this month"
+                id: "WH-01",
+                name: "AWS GuardDuty High Severity Event",
+                url: "https://bpa.injani.internal/api/v1/hooks/aws-guardduty-p1",
+                events24h: 14,
+                auth: "HMAC-SHA256 Signature"
               },
               {
-                name: "Cloud Security Privilege Escalation Audit",
-                source: "AWS CloudTrail & GitHub Enterprise",
-                endpoint: "POST /api/v1/webhooks/security/iam-audit",
-                lastTriggered: "Yesterday 23:14",
-                eventsCount: "14 events this month"
+                id: "WH-02",
+                name: "GitHub SOC2 Branch Protection Drift",
+                url: "https://bpa.injani.internal/api/v1/hooks/github-soc2-branch",
+                events24h: 3,
+                auth: "Bearer Token"
+              },
+              {
+                id: "WH-03",
+                name: "Okta User Offboarding Event",
+                url: "https://bpa.injani.internal/api/v1/hooks/okta-offboard-sweep",
+                events24h: 8,
+                auth: "Mutual TLS (mTLS)"
               }
-            ].map((wh, i) => (
-              <div key={i} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
+            ].map((wh) => (
+              <div key={wh.id} className="p-4 flex flex-wrap items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
-                    <h4 className="text-xs font-bold text-slate-900">{wh.name}</h4>
-                    <Badge variant="outline" className="text-[10px]">{wh.source}</Badge>
+                    <span className="font-mono text-xs font-semibold text-foreground">{wh.name}</span>
+                    <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground border border-border">
+                      {wh.auth}
+                    </span>
                   </div>
-                  <code className="text-[11px] text-slate-500 font-mono block">{wh.endpoint}</code>
+                  <code className="block text-[11px] font-mono text-muted-foreground bg-muted/40 px-2 py-1 rounded border border-border/40">
+                    {wh.url}
+                  </code>
                 </div>
-                <div className="text-right text-xs">
-                  <span className="font-semibold text-slate-800">{wh.eventsCount}</span>
-                  <p className="text-[11px] text-slate-400">Last: {wh.lastTriggered}</p>
+
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-xs text-muted-foreground">
+                    <strong className="text-foreground">{wh.events24h}</strong> events (24h)
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs font-mono"
+                    onClick={() => showToast(`Test payload dispatched to ${wh.id}`)}
+                  >
+                    Test Payload
+                  </Button>
                 </div>
               </div>
             ))}
@@ -266,41 +273,51 @@ export default function WorkflowsPage() {
       {/* TAB 4: ONE-TIME PIPELINES */}
       {activeTab === "one_time" && (
         <div className="space-y-4">
-          <div className="rounded-xl border border-amber-300 bg-amber-50/70 p-4 text-xs text-amber-900 flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-700 shrink-0" />
-            <span>
-              <strong>Ad-Hoc Execution Warning:</strong> One-time pipelines are single-run execution routines for manual data migrations, ad-hoc audits, or bulk updates.
-            </span>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Special ad-hoc execution jobs with step-by-step state tracking and non-reusable tokens.</span>
+            <span className="font-mono text-[11px]">2 available</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="border-slate-200">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-bold text-slate-900">Q3 Historical CapEx Audit Re-Indexing</CardTitle>
-                <CardDescription className="text-xs">
-                  One-time recalculation of all Q3 financial approval trees against amended audit policy guidelines.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button size="sm" variant="outline" className="w-full text-xs gap-1.5" onClick={() => showToast("Pipeline dispatched to worker pool.")}>
-                  <Play className="h-3 w-3" /> Run Ad-Hoc Pipeline
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="border-slate-200">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-bold text-slate-900">SOC2 IAM Access Matrix Bulk Export</CardTitle>
-                <CardDescription className="text-xs">
-                  Generate immutable cryptographically signed snapshot of all current elevated access grants for external auditors.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button size="sm" variant="outline" className="w-full text-xs gap-1.5" onClick={() => showToast("Snapshot generation queued.")}>
-                  <Play className="h-3 w-3" /> Export Audit Snapshot
-                </Button>
-              </CardContent>
-            </Card>
+            {[
+              {
+                title: "Annual ISO27001 Access Recertification Blast",
+                desc: "Dispatches individual recertification attestation tasks to all 120 department heads simultaneously.",
+                steps: 5,
+                impact: "Broad Organizational Scope"
+              },
+              {
+                title: "Q4 Disaster Recovery & Backup Failover Drill",
+                desc: "Initiates secondary region failover health checks with mandatory sign-off from VP Engineering and CISO.",
+                steps: 7,
+                impact: "Infrastructure Critical"
+              }
+            ].map((pipeline, i) => (
+              <Card key={i} className="border-border shadow-2xs">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+                    <span>{pipeline.steps} Phases</span>
+                    <span className="bg-muted px-1.5 py-0.5 rounded border border-border/50">{pipeline.impact}</span>
+                  </div>
+                  <CardTitle className="text-sm font-semibold text-foreground mt-2">
+                    {pipeline.title}
+                  </CardTitle>
+                  <CardDescription className="text-xs text-muted-foreground leading-relaxed">
+                    {pipeline.desc}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="w-full text-xs h-8 gap-1.5 font-medium"
+                    onClick={() => showToast(`Dry-run simulation initialized for: ${pipeline.title}`)}
+                  >
+                    <Play className="size-3 fill-current" /> Initialize Pipeline
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       )}
