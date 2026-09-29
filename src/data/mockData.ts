@@ -289,3 +289,96 @@ export const mockWorkflowCatalog: WorkflowTemplate[] = [
     description: "New supplier onboarding, legal compliance check, NDA verification, and finance payment term binding."
   }
 ];
+
+export interface UserSubmittedRequest {
+  id: string;
+  title: string;
+  category: string;
+  submittedAt: string;
+  amount?: string;
+  currentStage: string;
+  currentReviewer: string;
+  totalStages: number;
+  completedStages: number;
+  status: "in_review" | "approved" | "draft" | "rejected";
+  slaCountdown: string;
+  timeline: {
+    stage: string;
+    actor: string;
+    status: "completed" | "current" | "pending";
+    timestamp?: string;
+    comment?: string;
+  }[];
+}
+
+export const mockUserRequests: UserSubmittedRequest[] = [
+  {
+    id: "REQ-2026-881",
+    title: "CapEx — Secondary AWS Kubernetes Cluster Expansion",
+    category: "CapEx",
+    submittedAt: "28 Sep 2026, 14:20",
+    amount: "Rp 320,000,000",
+    currentStage: "IT Security & Architecture",
+    currentReviewer: "Aris Winandi (Approver)",
+    totalStages: 3,
+    completedStages: 1,
+    status: "in_review",
+    slaCountdown: "18h remaining",
+    timeline: [
+      { stage: "Stage 1: Line Manager", actor: "Dewi Lestari (Finance)", status: "completed", timestamp: "28 Sep 15:30", comment: "Budget code verified under Q4 cloud ops." },
+      { stage: "Stage 2: IT Security Review", actor: "Aris Winandi (Approver)", status: "current", timestamp: "In queue (SLA active)", comment: "Reviewing network isolation policies." },
+      { stage: "Stage 3: CFO Final Authorization", actor: "Bambang Soediro (CFO)", status: "pending" },
+    ],
+  },
+  {
+    id: "REQ-2026-874",
+    title: "Datadog Enterprise APM License Renewal (12 Months)",
+    category: "Software & SaaS",
+    submittedAt: "26 Sep 2026, 09:10",
+    amount: "Rp 145,000,000",
+    currentStage: "Executed & Active",
+    currentReviewer: "Completed",
+    totalStages: 3,
+    completedStages: 3,
+    status: "approved",
+    slaCountdown: "Executed",
+    timeline: [
+      { stage: "Stage 1: Line Manager", actor: "Dewi Lestari", status: "completed", timestamp: "26 Sep 10:00", comment: "Approved." },
+      { stage: "Stage 2: Procurement & Finance", actor: "Sari Wulandari", status: "completed", timestamp: "26 Sep 14:15", comment: "Price discount applied." },
+      { stage: "Stage 3: Contract Signing", actor: "Legal Team", status: "completed", timestamp: "27 Sep 11:00", comment: "Vendor master agreement signed." },
+    ],
+  },
+  {
+    id: "REQ-2026-869",
+    title: "Elevated Database Write Access Grant (Staging & Prod Replica)",
+    category: "IT Access",
+    submittedAt: "25 Sep 2026, 16:45",
+    currentStage: "IT Security Review",
+    currentReviewer: "IT Security Lead",
+    totalStages: 2,
+    completedStages: 0,
+    status: "in_review",
+    slaCountdown: "SLA Warning (< 4h)",
+    timeline: [
+      { stage: "Stage 1: IT Security & IAM", actor: "IT Security Lead", status: "current", timestamp: "In queue", comment: "Awaiting MFA key verification." },
+      { stage: "Stage 2: CISO Sign-off", actor: "Budi Santoso", status: "pending" },
+    ],
+  },
+  {
+    id: "REQ-2026-855",
+    title: "Q4 Disaster Recovery Hot-Standby Drill Pipeline",
+    category: "Infrastructure",
+    submittedAt: "Drafted 24 Sep 2026",
+    currentStage: "Drafting",
+    currentReviewer: "You (Not Submitted)",
+    totalStages: 3,
+    completedStages: 0,
+    status: "draft",
+    slaCountdown: "Draft",
+    timeline: [
+      { stage: "Draft Configuration", actor: "You", status: "current", timestamp: "Last saved yesterday" },
+      { stage: "Stage 1: Architecture Review", actor: "Alex Rivera", status: "pending" },
+      { stage: "Stage 2: Operational Clearance", actor: "VP Ops", status: "pending" },
+    ],
+  },
+];
