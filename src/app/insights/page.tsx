@@ -179,7 +179,7 @@ export default function InsightsPage() {
   const activePoint = weeklyVolumeTelemetry[hoveredPoint] || weeklyVolumeTelemetry[weeklyVolumeTelemetry.length - 1];
 
   return (
-    <div className="relative max-w-7xl mx-auto space-y-6">
+    <div className="relative w-full space-y-6">
       {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
         <div>

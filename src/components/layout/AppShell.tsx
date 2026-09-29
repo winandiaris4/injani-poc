@@ -266,7 +266,7 @@ export function AppShell({ children }: AppShellProps) {
         {/* Main Content Area */}
         <SidebarInset>
           {/* Top Navigation Bar */}
-          <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center justify-between border-b border-border bg-background/90 backdrop-blur-md px-4 gap-4">
+          <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center justify-between border-b border-border bg-background/90 backdrop-blur-md px-6 gap-4">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="-ml-1 size-7 text-muted-foreground hover:text-foreground" />
               <Separator orientation="vertical" className="h-4" />

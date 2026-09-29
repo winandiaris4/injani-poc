@@ -134,7 +134,7 @@ export default function InboxPage() {
     selectedIds.length === filteredApprovals.length;
 
   return (
-    <div className="relative max-w-7xl mx-auto space-y-5">
+    <div className="relative w-full space-y-5">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-20 right-8 z-50 flex items-center gap-2 rounded-md border border-border bg-foreground px-4 py-2.5 text-xs font-medium text-background shadow-lg animate-in slide-in-from-top-3 duration-200">

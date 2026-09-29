@@ -45,7 +45,7 @@ export default function DashboardPage() {
   const urgentApprovals = initialApprovals.filter((a) => a.isOverdue || a.status === "due_today");
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto">
+    <div className="space-y-5 w-full">
       {/* ZONE 1: URGENT CONTROLS & BREACH BAR */}
       <div className="rounded-xl border border-border bg-card p-3.5 shadow-2xs">
         <div className="flex flex-wrap items-center justify-between gap-3">
