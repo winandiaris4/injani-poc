@@ -30,13 +30,13 @@ export default function WorkflowsPage() {
 
   // Catalog Tab State
   const [catalogTrigger, setCatalogTrigger] = useState<"manual" | "cron" | "webhook" | "one_time">("manual");
-  const [cronList, setCronList] = useState(mockCronSchedules);
+  const [cronList, setCronList] = useState(mockCronSchedules || []);
 
   // Tracker State
   const [trackerFilter, setTrackerFilter] = useState<"all" | "in_review" | "approved" | "draft">("all");
   const [trackerSearch, setTrackerSearch] = useState("");
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>("REQ-2026-881");
-  const [myRequests, setMyRequests] = useState<UserSubmittedRequest[]>(mockUserRequests);
+  const [myRequests, setMyRequests] = useState<UserSubmittedRequest[]>(mockUserRequests || []);
 
   // Toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -49,37 +49,40 @@ export default function WorkflowsPage() {
   const handleRunNow = (cronId: string, name: string) => {
     showToast(`Immediate trigger sent: '${name}' is executing now.`);
     setCronList((prev) =>
-      prev.map((c) => (c.id === cronId ? { ...c, lastRunStatus: "running" as const, lastRunTime: "Just now" } : c))
+      (prev || []).map((c) => (c.id === cronId ? { ...c, lastRunStatus: "running" as const, lastRunTime: "Just now" } : c))
     );
   };
 
   const handleToggleCron = (cronId: string) => {
     setCronList((prev) =>
-      prev.map((c) => (c.id === cronId ? { ...c, isActive: !c.isActive } : c))
+      (prev || []).map((c) => (c.id === cronId ? { ...c, isActive: !c.isActive } : c))
     );
     showToast("Schedule state updated.");
   };
 
   const handleWithdrawRequest = (reqId: string) => {
-    setMyRequests((prev) => prev.filter((r) => r.id !== reqId));
+    setMyRequests((prev) => (prev || []).filter((r) => r.id !== reqId));
     showToast(`Request ${reqId} has been withdrawn.`);
   };
 
-  // Filtered requests
-  const filteredRequests = myRequests.filter((r) => {
+  // Filtered requests with defensive null-safety
+  const requestsList = myRequests || [];
+  const filteredRequests = requestsList.filter((r) => {
+    if (!r) return false;
     const matchesFilter = trackerFilter === "all" || r.status === trackerFilter;
+    const query = trackerSearch.toLowerCase();
     const matchesSearch =
-      r.title.toLowerCase().includes(trackerSearch.toLowerCase()) ||
-      r.id.toLowerCase().includes(trackerSearch.toLowerCase()) ||
-      r.category.toLowerCase().includes(trackerSearch.toLowerCase()) ||
-      r.currentReviewer.toLowerCase().includes(trackerSearch.toLowerCase());
+      (r.title || "").toLowerCase().includes(query) ||
+      (r.id || "").toLowerCase().includes(query) ||
+      (r.category || "").toLowerCase().includes(query) ||
+      (r.currentReviewer || "").toLowerCase().includes(query);
     return matchesFilter && matchesSearch;
   });
 
-  const totalCount = myRequests.length;
-  const inReviewCount = myRequests.filter((r) => r.status === "in_review").length;
-  const approvedCount = myRequests.filter((r) => r.status === "approved").length;
-  const draftCount = myRequests.filter((r) => r.status === "draft").length;
+  const totalCount = requestsList.length;
+  const inReviewCount = requestsList.filter((r) => r?.status === "in_review").length;
+  const approvedCount = requestsList.filter((r) => r?.status === "approved").length;
+  const draftCount = requestsList.filter((r) => r?.status === "draft").length;
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">

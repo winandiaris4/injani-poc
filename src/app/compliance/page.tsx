@@ -41,13 +41,13 @@ export default function CompliancePage() {
   const [complianceView, setComplianceView] = useState<"controls" | "automations">("controls");
 
   // Controls Registry State
-  const [controls, setControls] = useState<ControlItem[]>(mockControls);
+  const [controls, setControls] = useState<ControlItem[]>(mockControls || []);
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [selectedFramework, setSelectedFramework] = useState<string>("ALL");
   const [controlsSearch, setControlsSearch] = useState<string>("");
 
   // Automations & Sweeps State
-  const [cronList, setCronList] = useState<CronScheduleItem[]>(mockCronSchedules);
+  const [cronList, setCronList] = useState<CronScheduleItem[]>(mockCronSchedules || []);
   const [cronFilter, setCronFilter] = useState<"all" | "active" | "paused">("all");
   const [cronSearch, setCronSearch] = useState<string>("");
 
@@ -62,7 +62,7 @@ export default function CompliancePage() {
   const handleStartRenewal = (controlCode: string) => {
     showToast(`Automated renewal workflow initiated for control: ${controlCode}`);
     setControls((prev) =>
-      prev.map((c) =>
+      (prev || []).map((c) =>
         c.code === controlCode ? { ...c, status: "warning", daysRemaining: c.daysRemaining + 365 } : c
       )
     );
@@ -71,13 +71,13 @@ export default function CompliancePage() {
   const handleRunCronNow = (cronId: string, cronName: string) => {
     showToast(`Trigger dispatched: Automated sweep '${cronName}' executing now.`);
     setCronList((prev) =>
-      prev.map((c) =>
+      (prev || []).map((c) =>
         c.id === cronId ? { ...c, lastRunStatus: "running" as const, lastRunTime: "Just now" } : c
       )
     );
     setTimeout(() => {
       setCronList((prev) =>
-        prev.map((c) =>
+        (prev || []).map((c) =>
           c.id === cronId ? { ...c, lastRunStatus: "success" as const } : c
         )
       );
@@ -86,40 +86,46 @@ export default function CompliancePage() {
 
   const handleToggleCron = (cronId: string) => {
     setCronList((prev) =>
-      prev.map((c) => (c.id === cronId ? { ...c, isActive: !c.isActive } : c))
+      (prev || []).map((c) => (c.id === cronId ? { ...c, isActive: !c.isActive } : c))
     );
     showToast("Automation active schedule updated.");
   };
 
-  // Filtered Controls
-  const filteredControls = controls.filter((c) => {
+  // Filtered Controls with null-safety
+  const controlsList = controls || [];
+  const filteredControls = controlsList.filter((c) => {
+    if (!c) return false;
     const matchesFramework = selectedFramework === "ALL" || c.framework === selectedFramework;
+    const query = controlsSearch.toLowerCase();
     const matchesSearch =
-      c.code.toLowerCase().includes(controlsSearch.toLowerCase()) ||
-      c.name.toLowerCase().includes(controlsSearch.toLowerCase()) ||
-      c.owner.toLowerCase().includes(controlsSearch.toLowerCase());
+      (c.code || "").toLowerCase().includes(query) ||
+      (c.name || "").toLowerCase().includes(query) ||
+      (c.owner || "").toLowerCase().includes(query);
     return matchesFramework && matchesSearch;
   });
 
-  const criticalCount = controls.filter((c) => c.daysRemaining <= 7).length;
-  const renewalCount = controls.filter((c) => c.daysRemaining > 7 && c.daysRemaining <= 30).length;
-  const healthyCount = controls.filter((c) => c.daysRemaining > 30).length;
+  const criticalCount = controlsList.filter((c) => (c?.daysRemaining ?? 999) <= 7).length;
+  const renewalCount = controlsList.filter((c) => (c?.daysRemaining ?? 0) > 7 && (c?.daysRemaining ?? 0) <= 30).length;
+  const healthyCount = controlsList.filter((c) => (c?.daysRemaining ?? 0) > 30).length;
 
-  // Filtered Cron Schedules
-  const filteredCrons = cronList.filter((cron) => {
+  // Filtered Cron Schedules with null-safety
+  const cronsArray = cronList || [];
+  const filteredCrons = cronsArray.filter((cron) => {
+    if (!cron) return false;
     const matchesStatus =
       cronFilter === "all" ||
       (cronFilter === "active" && cron.isActive) ||
       (cronFilter === "paused" && !cron.isActive);
+    const query = cronSearch.toLowerCase();
     const matchesSearch =
-      cron.name.toLowerCase().includes(cronSearch.toLowerCase()) ||
-      cron.syntax.toLowerCase().includes(cronSearch.toLowerCase()) ||
-      cron.frequency.toLowerCase().includes(cronSearch.toLowerCase());
+      (cron.name || "").toLowerCase().includes(query) ||
+      (cron.syntax || "").toLowerCase().includes(query) ||
+      (cron.frequency || "").toLowerCase().includes(query);
     return matchesStatus && matchesSearch;
   });
 
-  const activeCronCount = cronList.filter((c) => c.isActive).length;
-  const pausedCronCount = cronList.filter((c) => !c.isActive).length;
+  const activeCronCount = cronsArray.filter((c) => c?.isActive).length;
+  const pausedCronCount = cronsArray.filter((c) => !c?.isActive).length;
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
