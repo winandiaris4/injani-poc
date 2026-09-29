@@ -10,15 +10,31 @@ import {
   Play,
   CheckCircle2,
   FileCheck2,
-  ExternalLink
+  ExternalLink,
+  Search,
+  Filter,
+  LayoutGrid,
+  Table as TableIcon,
+  ArrowUpDown,
+  RefreshCw,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { mockControls, ControlItem } from "@/data/mockData";
 
 export default function CompliancePage() {
   const [controls, setControls] = useState<ControlItem[]>(mockControls);
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
+  const [selectedFramework, setSelectedFramework] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -27,124 +43,294 @@ export default function CompliancePage() {
   };
 
   const handleStartRenewal = (controlCode: string) => {
-    showToast(`Triggering automated renewal workflow for control: ${controlCode}`);
+    showToast(`Automated renewal workflow initiated for control: ${controlCode}`);
+    setControls((prev) =>
+      prev.map((c) =>
+        c.code === controlCode ? { ...c, status: "warning", daysRemaining: c.daysRemaining + 365 } : c
+      )
+    );
   };
 
-  const expiringSoon = controls.filter((c) => c.daysRemaining <= 30);
-  const healthyControls = controls.filter((c) => c.daysRemaining > 30);
+  const filteredControls = controls.filter((c) => {
+    const matchesFramework = selectedFramework === "ALL" || c.framework === selectedFramework;
+    const matchesSearch =
+      c.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.owner.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesFramework && matchesSearch;
+  });
+
+  const criticalCount = controls.filter((c) => c.daysRemaining <= 7).length;
+  const renewalCount = controls.filter((c) => c.daysRemaining > 7 && c.daysRemaining <= 30).length;
+  const healthyCount = controls.filter((c) => c.daysRemaining > 30).length;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      {/* Toast */}
+    <div className="max-w-7xl mx-auto space-y-5">
+      {/* Toast Alert */}
       {toastMessage && (
-        <div className="fixed top-20 right-8 z-50 flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-xs font-semibold text-white shadow-xl animate-in slide-in-from-top-3 duration-200">
-          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+        <div className="fixed top-16 right-6 z-50 flex items-center gap-2 rounded-lg border border-border bg-foreground px-4 py-2.5 text-xs font-medium text-background shadow-xl animate-in slide-in-from-top-2 duration-150">
+          <CheckCircle2 className="size-4 text-emerald-400" />
           {toastMessage}
         </div>
       )}
 
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+          <h1 className="text-lg font-semibold tracking-tight text-foreground flex items-center gap-2">
             Continuous Controls Registry
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Operational compliance tracking, effective dates, lifecycle windows, and automated recertification.
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Operational compliance tracking, effective dates, lifecycle renewal windows, and automated attestation.
           </p>
+        </div>
+
+        {/* View Mode Switcher */}
+        <div className="inline-flex rounded-md border border-border bg-muted/40 p-0.5 text-xs">
+          <button
+            onClick={() => setViewMode("table")}
+            className={`rounded px-2.5 py-1 text-xs font-medium transition-all flex items-center gap-1.5 ${
+              viewMode === "table"
+                ? "bg-background text-foreground shadow-2xs font-semibold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <TableIcon className="size-3.5" />
+            <span>Table View</span>
+          </button>
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`rounded px-2.5 py-1 text-xs font-medium transition-all flex items-center gap-1.5 ${
+              viewMode === "grid"
+                ? "bg-background text-foreground shadow-2xs font-semibold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <LayoutGrid className="size-3.5" />
+            <span>Grid Cards</span>
+          </button>
         </div>
       </div>
 
-      {/* SECTION 1: EXPIRING CONTROLS RADAR */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between text-xs font-bold text-red-700 uppercase tracking-wider">
-          <span className="flex items-center gap-1.5">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
-            Expiring Within 30-Day Renewal Window ({expiringSoon.length})
+      {/* TOP SUMMARY STATS */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="rounded-lg border border-border bg-card p-3 space-y-1 shadow-2xs">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground block">
+            Total Monitored
           </span>
-          <span className="text-[11px] font-medium text-slate-500">Requires Recertification Sign-off</span>
+          <div className="text-2xl font-bold font-mono text-foreground tabular-nums">{controls.length}</div>
+          <span className="text-[11px] text-muted-foreground">Continuous audit coverage</span>
         </div>
 
-        <div className="grid grid-cols-1 gap-3">
-          {expiringSoon.map((ctrl) => {
+        <div className="rounded-lg border border-border bg-card p-3 space-y-1 shadow-2xs">
+          <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-rose-500 animate-pulse" />
+            <span>Critical (&le;7d)</span>
+          </div>
+          <div className="text-2xl font-bold font-mono text-rose-600 tabular-nums">{criticalCount}</div>
+          <span className="text-[11px] text-rose-600 font-medium">Requires immediate renewal</span>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-3 space-y-1 shadow-2xs">
+          <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-amber-500" />
+            <span>Renewal Window (&le;30d)</span>
+          </div>
+          <div className="text-2xl font-bold font-mono text-foreground tabular-nums">{renewalCount}</div>
+          <span className="text-[11px] text-muted-foreground">Scheduled recertification</span>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-3 space-y-1 shadow-2xs">
+          <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-foreground" />
+            <span>Enforced &amp; Healthy</span>
+          </div>
+          <div className="text-2xl font-bold font-mono text-foreground tabular-nums">{healthyCount}</div>
+          <span className="text-[11px] text-muted-foreground">Next review &gt; 30 days</span>
+        </div>
+      </div>
+
+      {/* FILTER & SEARCH BAR */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        {/* Framework Filter Tabs */}
+        <div className="inline-flex rounded-lg border border-border bg-muted/30 p-1 text-xs">
+          {["ALL", "ISO27001", "SOC2", "GDPR", "SLA"].map((fw) => (
+            <button
+              key={fw}
+              onClick={() => setSelectedFramework(fw)}
+              className={`rounded-md px-2.5 py-1 text-xs font-mono transition-all ${
+                selectedFramework === fw
+                  ? "bg-background text-foreground shadow-2xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {fw}
+            </button>
+          ))}
+        </div>
+
+        {/* Search */}
+        <div className="relative w-72">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search code, name, or owner..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-8 w-full rounded-md border border-input bg-card pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          />
+        </div>
+      </div>
+
+      {/* TABLE VIEW */}
+      {viewMode === "table" ? (
+        <div className="rounded-xl border border-border bg-card shadow-2xs overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/30 hover:bg-muted/30 text-xs">
+                <TableHead className="font-mono text-[11px] font-medium h-9">Control Code</TableHead>
+                <TableHead className="text-[11px] font-medium h-9">Control Scope &amp; Name</TableHead>
+                <TableHead className="font-mono text-[11px] font-medium h-9">Framework</TableHead>
+                <TableHead className="text-[11px] font-medium h-9">Owner</TableHead>
+                <TableHead className="font-mono text-[11px] font-medium h-9">Expires On</TableHead>
+                <TableHead className="text-[11px] font-medium h-9">Lifecycle Status</TableHead>
+                <TableHead className="text-right text-[11px] font-medium h-9 pr-4">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredControls.map((ctrl) => {
+                const isCritical = ctrl.daysRemaining <= 7;
+                const isRenewal = ctrl.daysRemaining > 7 && ctrl.daysRemaining <= 30;
+
+                return (
+                  <TableRow key={ctrl.id} className="text-xs hover:bg-muted/30 transition-colors">
+                    <TableCell className="font-mono font-semibold text-foreground py-3 whitespace-nowrap">
+                      {ctrl.code}
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <div className="font-medium text-foreground">{ctrl.name}</div>
+                      <div className="text-[10px] font-mono text-muted-foreground">Effective since: {ctrl.effectiveFrom}</div>
+                    </TableCell>
+                    <TableCell className="font-mono text-[11px] py-3 whitespace-nowrap">
+                      <span className="rounded bg-muted px-1.5 py-0.5 text-muted-foreground border border-border/60">
+                        {ctrl.framework}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground py-3 whitespace-nowrap">
+                      {ctrl.owner}
+                    </TableCell>
+                    <TableCell className="font-mono text-[11px] text-muted-foreground py-3 whitespace-nowrap">
+                      {ctrl.expiresAt}
+                    </TableCell>
+                    <TableCell className="py-3 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`size-1.5 rounded-full ${
+                            isCritical
+                              ? "bg-rose-500 animate-pulse"
+                              : isRenewal
+                              ? "bg-amber-500"
+                              : "bg-foreground"
+                          }`}
+                        />
+                        <span
+                          className={`font-mono text-[11px] ${
+                            isCritical
+                              ? "text-rose-600 font-semibold"
+                              : isRenewal
+                              ? "text-amber-600 font-medium"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          {isCritical
+                            ? `Critical (${ctrl.daysRemaining}d left)`
+                            : isRenewal
+                            ? `Renewal (${ctrl.daysRemaining}d left)`
+                            : `Healthy (${ctrl.daysRemaining}d left)`}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right py-3 pr-4 whitespace-nowrap">
+                      <Button
+                        size="sm"
+                        variant={isCritical ? "default" : "outline"}
+                        className="h-7 text-xs gap-1 font-normal"
+                        onClick={() => handleStartRenewal(ctrl.code)}
+                      >
+                        <RefreshCw className="size-3" />
+                        <span>Renew</span>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
+        /* GRID VIEW */
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {filteredControls.map((ctrl) => {
             const isCritical = ctrl.daysRemaining <= 7;
+            const isRenewal = ctrl.daysRemaining > 7 && ctrl.daysRemaining <= 30;
+
             return (
-              <div
-                key={ctrl.id}
-                className={`rounded-xl border p-4.5 bg-white shadow-xs transition-all flex flex-wrap items-center justify-between gap-4 ${
-                  isCritical
-                    ? "border-l-4 border-l-red-500 border-red-200"
-                    : "border-l-4 border-l-amber-500 border-amber-200"
-                }`}
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-[10px]">
+              <Card key={ctrl.id} className="border-border shadow-2xs hover:border-foreground/30 transition-colors">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border/60">
                       {ctrl.framework}
                     </span>
-                    <span className="font-mono text-xs font-bold text-slate-900">{ctrl.code}</span>
-                    <span className={`text-xs font-semibold ${isCritical ? "text-red-700" : "text-amber-700"}`}>
-                      ● Expires in {ctrl.daysRemaining} days ({ctrl.expiresAt})
-                    </span>
+                    <div className="flex items-center gap-1.5 font-mono text-[11px]">
+                      <span
+                        className={`size-1.5 rounded-full ${
+                          isCritical
+                            ? "bg-rose-500 animate-pulse"
+                            : isRenewal
+                            ? "bg-amber-500"
+                            : "bg-foreground"
+                        }`}
+                      />
+                      <span
+                        className={
+                          isCritical
+                            ? "text-rose-600 font-semibold"
+                            : isRenewal
+                            ? "text-amber-600"
+                            : "text-muted-foreground"
+                        }
+                      >
+                        {ctrl.daysRemaining}d remaining
+                      </span>
+                    </div>
                   </div>
-                  <h4 className="text-sm font-bold text-slate-900">{ctrl.name}</h4>
-                  <div className="flex items-center gap-3 text-xs text-slate-500">
-                    <span>Owner: <strong>{ctrl.owner}</strong></span>
-                    <span>•</span>
-                    <span>Effective Since: {ctrl.effectiveFrom}</span>
+                  <CardTitle className="text-sm font-semibold text-foreground mt-1.5">
+                    {ctrl.name}
+                  </CardTitle>
+                  <CardDescription className="font-mono text-xs text-muted-foreground">
+                    {ctrl.code}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-1">
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground border-t border-border/50 pt-2 font-mono">
+                    <span>Owner: <strong className="text-foreground font-normal">{ctrl.owner}</strong></span>
+                    <span>Expires: {ctrl.expiresAt}</span>
                   </div>
-                </div>
 
-                <Button
-                  size="sm"
-                  className={`text-xs gap-1.5 ${
-                    isCritical
-                      ? "bg-red-600 hover:bg-red-700 text-white font-bold"
-                      : "bg-slate-900 hover:bg-slate-800 text-white"
-                  }`}
-                  onClick={() => handleStartRenewal(ctrl.code)}
-                >
-                  <Play className="h-3 w-3 fill-current" /> Start Renewal Workflow
-                </Button>
-              </div>
+                  <Button
+                    size="sm"
+                    variant={isCritical ? "default" : "outline"}
+                    className="w-full text-xs h-7 gap-1.5 font-normal"
+                    onClick={() => handleStartRenewal(ctrl.code)}
+                  >
+                    <RefreshCw className="size-3" /> Start Recertification Workflow
+                  </Button>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
-      </div>
-
-      {/* SECTION 2: HEALTHY COMPLIANCE CONTROLS */}
-      <div className="space-y-3 pt-3">
-        <div className="flex items-center justify-between text-xs font-bold text-slate-600 uppercase tracking-wider">
-          <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            Healthy & Enforceable Controls ({healthyControls.length})
-          </span>
-          <span className="text-[11px] font-medium text-slate-400">Next review &gt; 30 days</span>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3">
-          {healthyControls.map((ctrl) => (
-            <div
-              key={ctrl.id}
-              className="rounded-xl border border-l-4 border-l-emerald-500 border-slate-200 bg-white p-4 shadow-xs flex items-center justify-between"
-            >
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-5 items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 text-[10px] font-mono font-semibold text-emerald-800">
-                    {ctrl.framework}
-                  </span>
-                  <span className="font-mono text-xs font-bold text-slate-800">{ctrl.code}</span>
-                  <span className="text-xs text-emerald-700 font-semibold">● Healthy ({ctrl.daysRemaining} days left)</span>
-                </div>
-                <h4 className="text-xs font-semibold text-slate-700">{ctrl.name}</h4>
-              </div>
-              <span className="text-[11px] text-slate-500">
-                Audited & Enforced
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
     </div>
   );
 }
