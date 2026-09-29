@@ -3,21 +3,18 @@
 import React, { useContext } from "react";
 import Link from "next/link";
 import {
-  AlertTriangle,
   Clock,
   ShieldAlert,
   ArrowRight,
   TrendingUp,
-  Play,
-  CheckCircle2,
   FileText,
-  UserCheck,
   ChevronRight,
   Sparkles,
   Zap,
-  Activity
+  Activity,
+  AlertCircle,
+  ExternalLink,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { PersonaContext } from "@/components/layout/AppShell";
@@ -31,42 +28,42 @@ export default function DashboardPage() {
   const criticalControls = mockControls.filter((c) => c.daysRemaining <= 7);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* ZONE 1: URGENT ACTIONS BAR (Sticky Top, Non-Removable Compliance Fire Alarm) */}
-      <div className="relative overflow-hidden rounded-xl border border-amber-300/80 bg-linear-to-r from-amber-50 via-amber-50/70 to-orange-50/60 p-4 shadow-xs">
+    <div className="space-y-5 max-w-7xl mx-auto">
+      {/* ZONE 1: URGENT CONTROLS & BREACH BAR (Refined Linear-style Guardrail) */}
+      <div className="rounded-xl border border-border bg-card p-3.5 shadow-2xs">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-900 border border-amber-500/30 font-bold">
-              <AlertTriangle className="h-5 w-5 text-amber-700 animate-bounce" />
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-foreground border border-border">
+              <AlertCircle className="size-3.5 text-foreground" />
             </div>
-            <div>
+            <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-900">
-                  Zone 1: Continuous Controls & Urgency Bar
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Zone 1 Guardrail
                 </span>
-                <span className="text-[10px] rounded bg-amber-200/70 px-1.5 py-0.2 font-semibold text-amber-900">
-                  Non-Removable Guardrail
+                <span className="text-[10px] font-mono text-muted-foreground border border-border px-1.5 py-0.2 rounded bg-muted/50">
+                  Continuous Urgency
                 </span>
               </div>
-              <div className="mt-0.5 flex flex-wrap items-center gap-4 text-xs font-medium text-slate-800">
+              <div className="flex flex-wrap items-center gap-3 text-xs text-foreground">
                 <Link
                   href="/inbox"
-                  className="flex items-center gap-1.5 hover:text-red-700 transition-colors"
+                  className="flex items-center gap-1.5 font-medium hover:underline text-foreground"
                 >
-                  <span className="flex h-2 w-2 rounded-full bg-red-600 animate-ping" />
-                  <span className="font-bold text-red-700">{overdueCount} approvals overdue (P1)</span>
-                  <span className="text-slate-500">— CapEx & Cloud Security Contract</span>
+                  <span className="size-1.5 rounded-full bg-rose-500 animate-pulse" />
+                  <span className="font-semibold">{overdueCount} approvals overdue (P1)</span>
+                  <span className="text-muted-foreground font-normal">— CapEx &amp; Cloud Security</span>
                 </Link>
-                <span className="text-slate-300">•</span>
+                <span className="text-muted-foreground/40">•</span>
                 <Link
                   href="/compliance"
-                  className="flex items-center gap-1.5 hover:text-amber-800 transition-colors"
+                  className="flex items-center gap-1.5 font-medium hover:underline text-foreground"
                 >
-                  <ShieldAlert className="h-3.5 w-3.5 text-amber-700" />
-                  <span className="font-bold text-amber-800">
-                    {criticalControls[0]?.code} expires in {criticalControls[0]?.daysRemaining} days
+                  <span className="size-1.5 rounded-full bg-amber-500" />
+                  <span>
+                    {criticalControls[0]?.code} expires in <strong className="font-semibold">{criticalControls[0]?.daysRemaining}d</strong>
                   </span>
-                  <span className="text-slate-500">(ISO27001 Access Attestation)</span>
+                  <span className="text-muted-foreground font-normal">(ISO27001 Access)</span>
                 </Link>
               </div>
             </div>
@@ -74,177 +71,221 @@ export default function DashboardPage() {
 
           <div className="flex items-center gap-2">
             <Link href="/inbox">
-              <Button size="sm" variant="destructive" className="h-8 gap-1.5 text-xs shadow-xs">
-                Triage Urgent ({overdueCount}) <ArrowRight className="h-3.5 w-3.5" />
+              <Button size="sm" variant="default" className="h-7 text-xs gap-1.5 px-3">
+                Triage Urgent ({overdueCount}) <ArrowRight className="size-3" />
               </Button>
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Role Context Notification */}
-      <div className="flex items-center justify-between rounded-lg bg-slate-100/80 px-4 py-2 text-xs text-slate-600 border border-slate-200/60">
+      {/* Perspective Info Pill */}
+      <div className="flex items-center justify-between rounded-lg bg-muted/40 px-3.5 py-1.5 text-xs text-muted-foreground border border-border/60">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-indigo-600" />
+          <Sparkles className="size-3 text-muted-foreground" />
           <span>
-            Active layout optimized for: <strong className="capitalize text-slate-900">{persona.replace("_", " ")}</strong>.
-            Widgets rearrange dynamically based on your operational hat.
+            Active layout optimized for: <strong className="font-medium text-foreground capitalize">{persona.replace("_", " ")}</strong>.
           </span>
         </div>
-        <span className="text-[11px] text-slate-400">Tier 1 One-Click Preset Active</span>
+        <span className="text-[11px] font-mono">Tier 1 Preset</span>
       </div>
 
       {/* ZONE 2: PRIMARY 2x2 METRICS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Card 1: Pending Approvals (Triage) */}
-        <Card className="hover:shadow-md transition-shadow border-slate-200/80">
+        <Card className="border-border shadow-2xs">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Clock className="h-4 w-4 text-indigo-600" />
+              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Clock className="size-3.5 text-muted-foreground" />
                 Pending Approvals Triage
               </CardTitle>
-              <CardDescription>Multi-tier sign-offs awaiting your review</CardDescription>
+              <CardDescription className="text-xs text-foreground font-medium mt-0.5">
+                Multi-tier sign-offs awaiting review
+              </CardDescription>
             </div>
             <Link href="/inbox">
-              <Button variant="ghost" size="sm" className="h-7 text-xs text-indigo-600 gap-1 hover:text-indigo-800">
-                View All <ArrowRight className="h-3 w-3" />
+              <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground gap-1 px-2">
+                View All <ArrowRight className="size-3" />
               </Button>
             </Link>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-xl border border-red-200 bg-red-50/60 p-3.5 text-center">
-                <div className="text-2xl font-black text-red-600">{overdueCount}</div>
-                <div className="text-[11px] font-bold text-red-800 uppercase tracking-wider mt-0.5">P1 Overdue</div>
-                <span className="text-[10px] text-red-600">SLA Breached</span>
+            <div className="grid grid-cols-3 gap-2.5">
+              <div className="rounded-lg border border-border bg-card p-3 text-left space-y-1">
+                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                  <span className="size-1.5 rounded-full bg-rose-500" />
+                  <span>P1 Overdue</span>
+                </div>
+                <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
+                  {overdueCount}
+                </div>
+                <div className="text-[10px] text-rose-600 font-medium">SLA Breached</div>
               </div>
-              <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5 text-center">
-                <div className="text-2xl font-black text-amber-600">{dueTodayCount}</div>
-                <div className="text-[11px] font-bold text-amber-800 uppercase tracking-wider mt-0.5">P2 Due Today</div>
-                <span className="text-[10px] text-amber-700">&lt; 24h Remaining</span>
+
+              <div className="rounded-lg border border-border bg-card p-3 text-left space-y-1">
+                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                  <span className="size-1.5 rounded-full bg-amber-500" />
+                  <span>P2 Due Today</span>
+                </div>
+                <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
+                  {dueTodayCount}
+                </div>
+                <div className="text-[10px] text-muted-foreground">&lt; 24h Remaining</div>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-center">
-                <div className="text-2xl font-black text-slate-700">8</div>
-                <div className="text-[11px] font-bold text-slate-700 uppercase tracking-wider mt-0.5">P3 Normal</div>
-                <span className="text-[10px] text-slate-500">Standard SLA</span>
+
+              <div className="rounded-lg border border-border bg-card p-3 text-left space-y-1">
+                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                  <span className="size-1.5 rounded-full bg-muted-foreground/40" />
+                  <span>P3 Normal</span>
+                </div>
+                <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
+                  8
+                </div>
+                <div className="text-[10px] text-muted-foreground">Standard SLA</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Card 2: My Active Requests */}
-        <Card className="hover:shadow-md transition-shadow border-slate-200/80">
+        <Card className="border-border shadow-2xs">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <FileText className="h-4 w-4 text-emerald-600" />
-                Workflows Submitted (My Requests)
+              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <FileText className="size-3.5 text-muted-foreground" />
+                Workflows Submitted
               </CardTitle>
-              <CardDescription>Live transparency into requests you initiated</CardDescription>
+              <CardDescription className="text-xs text-foreground font-medium mt-0.5">
+                My initiated requests &amp; live stages
+              </CardDescription>
             </div>
             <Link href="/workflows">
-              <Button variant="ghost" size="sm" className="h-7 text-xs text-indigo-600 gap-1 hover:text-indigo-800">
-                Track <ArrowRight className="h-3 w-3" />
+              <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground gap-1 px-2">
+                Track <ArrowRight className="size-3" />
               </Button>
             </Link>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/70 px-3.5 py-2">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-2 w-2 rounded-full bg-blue-500" />
-                  <span className="text-xs font-semibold text-slate-800">In Review (Awaiting Reviewers)</span>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between rounded-md border border-border/80 bg-muted/20 px-3 py-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-foreground/60" />
+                  <span className="font-medium text-foreground">In Review (Awaiting Reviewers)</span>
                 </div>
-                <span className="font-bold">2 active</span>
+                <span className="font-mono text-muted-foreground text-[11px]">2 active</span>
               </div>
-              <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/70 px-3.5 py-2">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
-                  <span className="text-xs font-semibold text-slate-800">Approved & Executed This Week</span>
+
+              <div className="flex items-center justify-between rounded-md border border-border/80 bg-muted/20 px-3 py-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-foreground" />
+                  <span className="font-medium text-foreground">Approved &amp; Executed (This Week)</span>
                 </div>
-                <span className="inline-flex h-5 items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 text-[10px] font-bold text-emerald-800">5 completed</span>
+                <span className="font-mono text-foreground font-semibold text-[11px]">5 completed</span>
               </div>
-              <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/70 px-3.5 py-2">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-2 w-2 rounded-full bg-slate-400" />
-                  <span className="text-xs font-semibold text-slate-800">Draft Pipelines & Templates</span>
+
+              <div className="flex items-center justify-between rounded-md border border-border/80 bg-muted/20 px-3 py-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-muted-foreground/40" />
+                  <span className="font-medium text-foreground">Draft Pipelines &amp; Templates</span>
                 </div>
-                <span className="font-bold">1 draft</span>
+                <span className="font-mono text-muted-foreground text-[11px]">1 draft</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Card 3: Expiring Controls Registry Radar */}
-        <Card className="hover:shadow-md transition-shadow border-slate-200/80">
+        {/* Card 3: Expiring Controls Radar */}
+        <Card className="border-border shadow-2xs">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <ShieldAlert className="h-4 w-4 text-amber-600" />
+              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <ShieldAlert className="size-3.5 text-muted-foreground" />
                 Continuous Controls Health Radar
               </CardTitle>
-              <CardDescription>Horizon foresight into expiring audits & policies</CardDescription>
+              <CardDescription className="text-xs text-foreground font-medium mt-0.5">
+                Horizon foresight into expiring audits
+              </CardDescription>
             </div>
             <Link href="/compliance">
-              <Button variant="ghost" size="sm" className="h-7 text-xs text-indigo-600 gap-1 hover:text-indigo-800">
-                Registry <ArrowRight className="h-3 w-3" />
+              <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground gap-1 px-2">
+                Registry <ArrowRight className="size-3" />
               </Button>
             </Link>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-red-200/80 bg-red-50/40 p-3.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-red-700 uppercase">Imminent Expiry</span>
-                  <span className="text-[10px]">≤ 7 Days</span>
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="rounded-lg border border-border bg-card p-3 space-y-1">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span className="font-medium flex items-center gap-1.5">
+                    <span className="size-1.5 rounded-full bg-rose-500" />
+                    ≤ 7 Days Expiry
+                  </span>
+                  <span className="font-mono text-[10px]">Critical</span>
                 </div>
-                <div className="mt-2 text-2xl font-black text-red-700">1 control</div>
-                <p className="mt-1 text-[11px] text-slate-600 truncate">ISO27001 Access Review (6d)</p>
+                <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
+                  1 control
+                </div>
+                <p className="text-[11px] text-muted-foreground truncate">ISO27001 Access Review (6d)</p>
               </div>
 
-              <div className="rounded-xl border border-amber-200/80 bg-amber-50/40 p-3.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-amber-700 uppercase">30-Day Window</span>
-                  <span className="inline-flex h-5 items-center rounded-full border border-amber-200 bg-amber-50 px-2 text-[10px] font-semibold text-amber-800">Renewal Alert</span>
+              <div className="rounded-lg border border-border bg-card p-3 space-y-1">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span className="font-medium flex items-center gap-1.5">
+                    <span className="size-1.5 rounded-full bg-amber-500" />
+                    30-Day Window
+                  </span>
+                  <span className="font-mono text-[10px]">Renewal</span>
                 </div>
-                <div className="mt-2 text-2xl font-black text-amber-700">2 controls</div>
-                <p className="mt-1 text-[11px] text-slate-600 truncate">SOC2 & GDPR Retentions</p>
+                <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
+                  2 controls
+                </div>
+                <p className="text-[11px] text-muted-foreground truncate">SOC2 &amp; GDPR Retention</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Card 4: SLA Compliance Scorecard */}
-        <Card className="hover:shadow-md transition-shadow border-slate-200/80">
+        <Card className="border-border shadow-2xs">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-indigo-600" />
-                SLA Compliance & Cycle Times
+              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <TrendingUp className="size-3.5 text-muted-foreground" />
+                SLA Compliance &amp; Cycle Times
               </CardTitle>
-              <CardDescription>Personal vs Team operational throughput</CardDescription>
+              <CardDescription className="text-xs text-foreground font-medium mt-0.5">
+                Personal vs. Team operational throughput
+              </CardDescription>
             </div>
             <Link href="/insights">
-              <Button variant="ghost" size="sm" className="h-7 text-xs text-indigo-600 gap-1 hover:text-indigo-800">
-                Analytics <ArrowRight className="h-3 w-3" />
+              <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground gap-1 px-2">
+                Insights <ArrowRight className="size-3" />
               </Button>
             </Link>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between pt-1">
-              <div>
-                <div className="text-3xl font-black text-slate-900">87.4%</div>
-                <p className="text-xs font-semibold text-slate-500 mt-0.5">Personal SLA Compliance</p>
-                <span className="text-[11px] text-amber-700 font-medium">⚠️ 2.6% below target (90%)</span>
+              <div className="space-y-0.5">
+                <div className="text-3xl font-bold font-mono tracking-tight text-foreground tabular-nums">
+                  87.4%
+                </div>
+                <p className="text-xs text-muted-foreground">Personal SLA Compliance</p>
+                <div className="text-[11px] font-mono text-muted-foreground pt-0.5">
+                  Target: 90% (-2.6% delta)
+                </div>
               </div>
 
-              <div className="h-12 w-px bg-slate-200" />
+              <div className="h-10 w-px bg-border" />
 
-              <div>
-                <div className="text-3xl font-black text-slate-700">91.8%</div>
-                <p className="text-xs font-semibold text-slate-500 mt-0.5">Team Average</p>
-                <span className="text-[11px] text-emerald-600 font-medium">✓ Exceeds benchmark</span>
+              <div className="space-y-0.5">
+                <div className="text-3xl font-bold font-mono tracking-tight text-foreground tabular-nums">
+                  91.8%
+                </div>
+                <p className="text-xs text-muted-foreground">Team Average</p>
+                <div className="text-[11px] font-mono text-foreground font-medium pt-0.5">
+                  ✓ Exceeds benchmark
+                </div>
               </div>
             </div>
           </CardContent>
@@ -252,34 +293,34 @@ export default function DashboardPage() {
       </div>
 
       {/* ZONE 3: SECONDARY WIDGETS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Quick Launch Shortcuts */}
-        <Card className="border-slate-200/80">
+        <Card className="border-border shadow-2xs">
           <CardHeader className="pb-3">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-              <Zap className="h-3.5 w-3.5 text-amber-500" />
-              Quick Workflow Initiation
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <Zap className="size-3.5 text-muted-foreground" />
+              Quick Initiation Shortcuts
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
               <Link href="/workflows">
-                <Button variant="outline" size="sm" className="rounded-full text-xs hover:border-indigo-400">
-                  + Travel & Expense
+                <Button variant="outline" size="sm" className="h-7 rounded-md text-xs font-normal hover:bg-accent">
+                  + Travel &amp; Expense
                 </Button>
               </Link>
               <Link href="/workflows">
-                <Button variant="outline" size="sm" className="rounded-full text-xs hover:border-indigo-400">
-                  + Elevated IT Access Grant
+                <Button variant="outline" size="sm" className="h-7 rounded-md text-xs font-normal hover:bg-accent">
+                  + IT Access Grant
                 </Button>
               </Link>
               <Link href="/workflows">
-                <Button variant="outline" size="sm" className="rounded-full text-xs hover:border-indigo-400">
+                <Button variant="outline" size="sm" className="h-7 rounded-md text-xs font-normal hover:bg-accent">
                   + Vendor Onboarding
                 </Button>
               </Link>
               <Link href="/workflows">
-                <Button variant="secondary" size="sm" className="rounded-full text-xs text-indigo-700 font-semibold">
+                <Button variant="secondary" size="sm" className="h-7 rounded-md text-xs font-medium">
                   Browse All 4 Triggers →
                 </Button>
               </Link>
@@ -288,25 +329,27 @@ export default function DashboardPage() {
         </Card>
 
         {/* Background Automations & Cron Monitor */}
-        <Card className="border-slate-200/80">
+        <Card className="border-border shadow-2xs">
           <CardHeader className="pb-3 flex flex-row items-center justify-between">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-              <Activity className="h-3.5 w-3.5 text-indigo-500" />
-              Background Automations & Cron Sweeps
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <Activity className="size-3.5 text-muted-foreground" />
+              Background Automations &amp; Sweeps
             </CardTitle>
-            <span className="text-[10px]">No Noise Monitoring</span>
+            <span className="text-[10px] font-mono text-muted-foreground">No Noise Active</span>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {mockCronSchedules.slice(0, 2).map((c) => (
-                <div key={c.id} className="flex items-center justify-between text-xs py-1 border-b border-slate-100 last:border-0">
+                <div key={c.id} className="flex items-center justify-between text-xs py-1 border-b border-border/50 last:border-0">
                   <div className="flex items-center gap-2">
-                    <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
-                    <span className="font-mono text-slate-800 font-semibold">{c.name}</span>
+                    <span className="size-1.5 rounded-full bg-foreground" />
+                    <span className="font-mono text-foreground font-medium">{c.name}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-slate-500">
-                    <span>{c.lastRunTime}</span>
-                    <span className="inline-flex h-5 items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 text-[10px] font-semibold text-emerald-800">✓ Passed</span>
+                  <div className="flex items-center gap-3 text-muted-foreground">
+                    <span className="font-mono text-[11px]">{c.lastRunTime}</span>
+                    <span className="inline-flex h-5 items-center rounded border border-border bg-muted/50 px-1.5 text-[10px] font-mono font-medium text-foreground">
+                      Passed
+                    </span>
                   </div>
                 </div>
               ))}

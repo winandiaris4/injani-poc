@@ -399,8 +399,8 @@ export default function InboxPage() {
               <div className="pt-4 border-t border-slate-100 space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <Button
-                    className="bg-emerald-50 text-emerald-800 border border-emerald-200 inline-flex h-5 items-center rounded-full px-2 text-[11px] font-medium"
-                    className="w-full gap-1.5 text-xs font-bold shadow-xs"
+                    variant="default"
+                    className="w-full gap-1.5 text-xs font-medium"
                     onClick={() => handleAction(selectedApproval.id, "approved")}
                   >
                     <CheckCircle2 className="h-4 w-4" /> Approve & Next
