@@ -303,8 +303,8 @@ export default function DashboardPage() {
               <div className="grid grid-cols-7 gap-2 h-20 items-end pt-2 pb-1 border-b border-border/80">
                 {slaWeeklyTelemetry.map((item, idx) => {
                   const maxTotal = 30;
-                  const onTimePx = Math.max(Math.round((item.onTime / maxTotal) * 44), 6);
-                  const breachedPx = item.breached > 0 ? Math.max(Math.round((item.breached / maxTotal) * 44), 5) : 0;
+                  const onTimeHeight = (item.onTime / maxTotal) * 100;
+                  const breachedHeight = (item.breached / maxTotal) * 100;
                   const isHovered = hoveredBar === idx;
 
                   return (
@@ -321,17 +321,17 @@ export default function DashboardPage() {
                         </div>
                       )}
 
-                      {/* Stacked Bar with guaranteed pixel heights */}
-                      <div className="w-full h-14 flex flex-col justify-end gap-0.5 rounded-xs overflow-hidden">
+                      {/* Stacked Bar */}
+                      <div className="w-full flex flex-col justify-end gap-0.5 rounded-xs overflow-hidden">
                         {item.breached > 0 && (
                           <div
-                            style={{ height: `${breachedPx}px` }}
-                            className="w-full bg-rose-500 transition-all group-hover:opacity-85"
+                            style={{ height: `${Math.max(breachedHeight, 4)}%` }}
+                            className="w-full bg-rose-500 transition-all group-hover:opacity-80"
                           />
                         )}
                         <div
-                          style={{ height: `${onTimePx}px` }}
-                          className="w-full bg-foreground transition-all group-hover:opacity-85"
+                          style={{ height: `${Math.max(onTimeHeight, 6)}%` }}
+                          className="w-full bg-foreground transition-all group-hover:opacity-80"
                         />
                       </div>
 
