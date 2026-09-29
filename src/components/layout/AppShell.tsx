@@ -100,18 +100,57 @@ export const PersonaContext = React.createContext<{
   profile: PERSONA_PROFILES.approver,
 });
 
-const navItems = [
-  { label: "Dashboard", href: "/", icon: LayoutDashboard, badge: null, dotColor: "" },
-  { label: "Inbox", href: "/inbox", icon: Inbox, badge: "3", dotColor: "bg-rose-500" },
-  { label: "Workflows", href: "/workflows", icon: GitBranch, badge: null, dotColor: "" },
-  { label: "Compliance", href: "/compliance", icon: ShieldCheck, badge: "2", dotColor: "bg-amber-500" },
-  { label: "Insights", href: "/insights", icon: BarChart3, badge: null, dotColor: "" },
-];
+function getNavItems(persona: PersonaType) {
+  switch (persona) {
+    case "approver":
+      return [
+        { label: "Dashboard", href: "/", icon: LayoutDashboard, badge: null, dotColor: "" },
+        { label: "Inbox", href: "/inbox", icon: Inbox, badge: "3", dotColor: "bg-rose-500" },
+        { label: "Workflows", href: "/workflows", icon: GitBranch, badge: null, dotColor: "" },
+        { label: "Compliance", href: "/compliance", icon: ShieldCheck, badge: "2", dotColor: "bg-amber-500" },
+        { label: "Insights", href: "/insights", icon: BarChart3, badge: null, dotColor: "" },
+      ];
+    case "requester":
+      return [
+        { label: "Dashboard", href: "/", icon: LayoutDashboard, badge: null, dotColor: "" },
+        { label: "Inbox", href: "/inbox", icon: Inbox, badge: null, dotColor: "" },
+        { label: "Workflows", href: "/workflows", icon: GitBranch, badge: "2", dotColor: "bg-foreground/70" },
+        { label: "Compliance", href: "/compliance", icon: ShieldCheck, badge: null, dotColor: "" },
+        { label: "Insights", href: "/insights", icon: BarChart3, badge: null, dotColor: "" },
+      ];
+    case "control_owner":
+      return [
+        { label: "Dashboard", href: "/", icon: LayoutDashboard, badge: null, dotColor: "" },
+        { label: "Inbox", href: "/inbox", icon: Inbox, badge: "1", dotColor: "bg-amber-500" },
+        { label: "Workflows", href: "/workflows", icon: GitBranch, badge: null, dotColor: "" },
+        { label: "Compliance", href: "/compliance", icon: ShieldCheck, badge: "2", dotColor: "bg-rose-500" },
+        { label: "Insights", href: "/insights", icon: BarChart3, badge: null, dotColor: "" },
+      ];
+    case "automation_owner":
+      return [
+        { label: "Dashboard", href: "/", icon: LayoutDashboard, badge: null, dotColor: "" },
+        { label: "Inbox", href: "/inbox", icon: Inbox, badge: null, dotColor: "" },
+        { label: "Workflows", href: "/workflows", icon: GitBranch, badge: "4", dotColor: "bg-emerald-500" },
+        { label: "Compliance", href: "/compliance", icon: ShieldCheck, badge: "0", dotColor: "bg-emerald-500" },
+        { label: "Insights", href: "/insights", icon: BarChart3, badge: null, dotColor: "" },
+      ];
+    default:
+      return [
+        { label: "Dashboard", href: "/", icon: LayoutDashboard, badge: null, dotColor: "" },
+        { label: "Inbox", href: "/inbox", icon: Inbox, badge: "3", dotColor: "bg-rose-500" },
+        { label: "Workflows", href: "/workflows", icon: GitBranch, badge: null, dotColor: "" },
+        { label: "Compliance", href: "/compliance", icon: ShieldCheck, badge: "2", dotColor: "bg-amber-500" },
+        { label: "Insights", href: "/insights", icon: BarChart3, badge: null, dotColor: "" },
+      ];
+  }
+}
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const [persona, setPersonaState] = useState<PersonaType>("approver");
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+
+  const navItems = getNavItems(persona);
 
   // Sync with localStorage on client mount
   React.useEffect(() => {

@@ -35,8 +35,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { mockControls, ControlItem, mockCronSchedules, CronScheduleItem } from "@/data/mockData";
+import { PersonaContext } from "@/components/layout/AppShell";
 
 export default function CompliancePage() {
+  const { persona, profile } = React.useContext(PersonaContext);
+
   // Top-Level IA Switcher: Controls Registry vs Automations & Scheduled Sweeps
   const [complianceView, setComplianceView] = useState<"controls" | "automations">("controls");
 
@@ -45,6 +48,17 @@ export default function CompliancePage() {
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [selectedFramework, setSelectedFramework] = useState<string>("ALL");
   const [controlsSearch, setControlsSearch] = useState<string>("");
+
+  // Sync smart defaults when persona changes
+  React.useEffect(() => {
+    if (persona === "automation_owner") {
+      setComplianceView("automations");
+    } else if (persona === "control_owner") {
+      setComplianceView("controls");
+    } else {
+      setComplianceView("controls");
+    }
+  }, [persona]);
 
   // Automations & Sweeps State
   const [cronList, setCronList] = useState<CronScheduleItem[]>(mockCronSchedules);
@@ -214,6 +228,34 @@ export default function CompliancePage() {
               <Plus className="size-3.5" /> Add Sweep
             </Button>
           )}
+        </div>
+      </div>
+
+      {/* Smart Role Context Banner */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/80 bg-muted/20 px-3.5 py-2 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="flex size-5 items-center justify-center rounded bg-foreground text-background font-mono text-[10px] font-bold">
+            {profile?.initials || "IN"}
+          </span>
+          <span className="text-muted-foreground">
+            Smart Context: <strong className="text-foreground">{profile?.name}</strong> ({profile?.roleTitle})
+          </span>
+          <span className="text-muted-foreground/60">•</span>
+          <span className="font-medium text-foreground">
+            {persona === "control_owner"
+              ? "Auto-routed to Continuous Controls Registry (highlighting 1 control expiring in ≤7d)"
+              : persona === "automation_owner"
+              ? "Auto-routed to Automations & Scheduled Sweeps (4 daemons configured)"
+              : "Continuous Controls Governance view active"}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setComplianceView(complianceView === "controls" ? "automations" : "controls")}
+            className="text-[11px] font-mono text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+          >
+            Switch to {complianceView === "controls" ? "Automations & Sweeps" : "Controls Registry"} →
+          </button>
         </div>
       </div>
 

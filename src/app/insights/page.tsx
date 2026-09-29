@@ -30,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PersonaContext } from "@/components/layout/AppShell";
 
 interface DepartmentMetric {
   dept: string;
@@ -149,6 +150,7 @@ const auditTrailEvents = [
 ];
 
 export default function InsightsPage() {
+  const { persona, profile } = React.useContext(PersonaContext);
   const [timeframe, setTimeframe] = useState<"7d" | "30d" | "q3">("30d");
   const [hoveredPoint, setHoveredPoint] = useState<number>(5); // default W39 (Curr)
 
@@ -224,6 +226,37 @@ export default function InsightsPage() {
             <span>Export CSV</span>
           </Button>
         </div>
+      </div>
+
+      {/* Persona Metric Focus Banner */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/80 bg-muted/20 px-3.5 py-2 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="flex size-5 items-center justify-center rounded bg-foreground text-background font-mono text-[10px] font-bold">
+            {profile?.initials || "IN"}
+          </span>
+          <span className="text-muted-foreground">
+            Analytics Focus: <strong className="text-foreground">{profile?.name}</strong> ({profile?.roleTitle})
+          </span>
+          <span className="text-muted-foreground/60">•</span>
+          <span className="font-medium text-foreground">
+            {persona === "approver"
+              ? "Executive Lens: SLA Bottlenecks, Department Rankings & Review Turnaround Times"
+              : persona === "requester"
+              ? "Requester Lens: End-to-End Cycle Time & Fulfillment Velocity for Initiated Requests"
+              : persona === "control_owner"
+              ? "GRC Lens: Continuous Controls Adherence & Zero-Touch Evidence Automation"
+              : "DevOps Lens: Background Cron Reliability & High-Throughput Daemon Sweeps"}
+          </span>
+        </div>
+        <span className="text-[11px] font-mono text-muted-foreground">
+          {persona === "approver"
+            ? "Target SLA: ≥ 90.0%"
+            : persona === "requester"
+            ? "Avg Turnaround: 2.4d"
+            : persona === "control_owner"
+            ? "Audit Readiness: 98.2%"
+            : "4 Active Daemons"}
+        </span>
       </div>
 
       {/* TOP ROW: EXECUTIVE KPI METRIC SCORECARDS */}

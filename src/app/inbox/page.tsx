@@ -36,8 +36,11 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { initialApprovals, ApprovalItem } from "@/data/mockData";
+import { PersonaContext } from "@/components/layout/AppShell";
+import Link from "next/link";
 
 export default function InboxPage() {
+  const { persona, profile } = React.useContext(PersonaContext);
   const [approvals, setApprovals] = useState<ApprovalItem[]>(initialApprovals);
   const [selectedApproval, setSelectedApproval] = useState<ApprovalItem | null>(
     initialApprovals[0] || null
@@ -188,6 +191,36 @@ export default function InboxPage() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Smart Role Context Banner */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/80 bg-muted/20 px-3.5 py-2 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="flex size-5 items-center justify-center rounded bg-foreground text-background font-mono text-[10px] font-bold">
+            {profile?.initials || "IN"}
+          </span>
+          <span className="text-muted-foreground">
+            Smart Context: <strong className="text-foreground">{profile?.name}</strong> ({profile?.roleTitle})
+          </span>
+          <span className="text-muted-foreground/60">•</span>
+          <span className="font-medium text-foreground">
+            {persona === "approver"
+              ? "3 pending sign-offs waiting on your signature (2 P1 overdue breach risks)"
+              : persona === "requester"
+              ? "You have 0 pending approvals requiring your sign-off"
+              : persona === "control_owner"
+              ? "GRC Oversight: Viewing sign-offs with compliance implications"
+              : "DevOps & Automations View: System approvals and exceptions queue"}
+          </span>
+        </div>
+        {persona === "requester" && (
+          <Link
+            href="/workflows"
+            className="text-[11px] font-mono text-foreground font-semibold hover:underline flex items-center gap-1"
+          >
+            Track My Requests in Workflows →
+          </Link>
+        )}
       </div>
 
       {/* Filter Tabs & Search Bar */}

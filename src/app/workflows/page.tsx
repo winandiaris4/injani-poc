@@ -23,8 +23,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { mockWorkflowCatalog, mockCronSchedules, mockUserRequests, UserSubmittedRequest } from "@/data/mockData";
+import { PersonaContext } from "@/components/layout/AppShell";
 
 export default function WorkflowsPage() {
+  const { persona, profile } = React.useContext(PersonaContext);
+
   // Top-Level IA Switcher: Initiation Catalog vs My Requests Tracker
   const [moduleView, setModuleView] = useState<"catalog" | "tracker">("catalog");
 
@@ -37,6 +40,19 @@ export default function WorkflowsPage() {
   const [trackerSearch, setTrackerSearch] = useState("");
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>("REQ-2026-881");
   const [myRequests, setMyRequests] = useState<UserSubmittedRequest[]>(mockUserRequests);
+
+  // Sync smart defaults when persona changes
+  React.useEffect(() => {
+    if (persona === "requester") {
+      setModuleView("tracker");
+    } else if (persona === "automation_owner") {
+      setModuleView("catalog");
+      setCatalogTrigger("cron");
+    } else {
+      setModuleView("catalog");
+      setCatalogTrigger("manual");
+    }
+  }, [persona]);
 
   // Toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -143,6 +159,34 @@ export default function WorkflowsPage() {
               <Plus className="size-3.5" /> New Template
             </Button>
           )}
+        </div>
+      </div>
+
+      {/* Smart Role Context Banner */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/80 bg-muted/20 px-3.5 py-2 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="flex size-5 items-center justify-center rounded bg-foreground text-background font-mono text-[10px] font-bold">
+            {profile?.initials || "IN"}
+          </span>
+          <span className="text-muted-foreground">
+            Smart Context: <strong className="text-foreground">{profile?.name}</strong> ({profile?.roleTitle})
+          </span>
+          <span className="text-muted-foreground/60">•</span>
+          <span className="font-medium text-foreground">
+            {persona === "requester"
+              ? "Auto-routed to My Requests Tracker (2 live submissions in review)"
+              : persona === "automation_owner"
+              ? "Auto-routed to Cron & Scheduled Daemon Sweeps"
+              : "Standard Initiation Catalog view active"}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setModuleView(moduleView === "catalog" ? "tracker" : "catalog")}
+            className="text-[11px] font-mono text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+          >
+            Switch to {moduleView === "catalog" ? "My Requests Tracker" : "Catalog"} →
+          </button>
         </div>
       </div>
 
