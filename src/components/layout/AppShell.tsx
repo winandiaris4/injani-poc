@@ -19,6 +19,7 @@ import {
   FileSpreadsheet,
   ShieldAlert,
   Cpu,
+  LogOut,
 } from "lucide-react";
 import {
   Sidebar,
@@ -45,12 +46,58 @@ interface AppShellProps {
 
 export type PersonaType = "approver" | "requester" | "control_owner" | "automation_owner";
 
+export interface PersonaProfile {
+  name: string;
+  email: string;
+  initials: string;
+  roleTitle: string;
+  department: string;
+  persona: PersonaType;
+}
+
+export const PERSONA_PROFILES: Record<PersonaType, PersonaProfile> = {
+  approver: {
+    name: "Aris Winandi",
+    email: "aris@injani.internal",
+    initials: "AW",
+    roleTitle: "VP of Operations & Finance",
+    department: "Executive Operations",
+    persona: "approver",
+  },
+  requester: {
+    name: "Sarah Jenkins",
+    email: "sarah.j@injani.internal",
+    initials: "SJ",
+    roleTitle: "Lead Product Architect",
+    department: "Product & Engineering",
+    persona: "requester",
+  },
+  control_owner: {
+    name: "Budi Santoso",
+    email: "budi.s@injani.internal",
+    initials: "BS",
+    roleTitle: "Chief Information Security Officer",
+    department: "Governance, Risk & Compliance",
+    persona: "control_owner",
+  },
+  automation_owner: {
+    name: "Alex Rivera",
+    email: "alex.r@injani.internal",
+    initials: "AR",
+    roleTitle: "Principal Infrastructure Engineer",
+    department: "Platform DevOps & SRE",
+    persona: "automation_owner",
+  },
+};
+
 export const PersonaContext = React.createContext<{
   persona: PersonaType;
   setPersona: (p: PersonaType) => void;
+  profile: PersonaProfile;
 }>({
   persona: "approver",
   setPersona: () => {},
+  profile: PERSONA_PROFILES.approver,
 });
 
 const navItems = [
@@ -63,11 +110,43 @@ const navItems = [
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
-  const [persona, setPersona] = useState<PersonaType>("approver");
+  const [persona, setPersonaState] = useState<PersonaType>("approver");
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
 
+  // Sync with localStorage on client mount
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem("injani_persona") as PersonaType;
+      if (saved && PERSONA_PROFILES[saved]) {
+        setPersonaState(saved);
+      }
+    } catch (e) {
+      // Ignore
+    }
+  }, []);
+
+  const setPersona = (p: PersonaType) => {
+    setPersonaState(p);
+    try {
+      localStorage.setItem("injani_persona", p);
+    } catch (e) {
+      // Ignore
+    }
+  };
+
+  const profile = PERSONA_PROFILES[persona] || PERSONA_PROFILES.approver;
+
+  // Dedicated standalone view for login / identity gateway
+  if (pathname === "/login") {
+    return (
+      <PersonaContext.Provider value={{ persona, setPersona, profile }}>
+        {children}
+      </PersonaContext.Provider>
+    );
+  }
+
   return (
-    <PersonaContext.Provider value={{ persona, setPersona }}>
+    <PersonaContext.Provider value={{ persona, setPersona, profile }}>
       <SidebarProvider defaultOpen={true}>
         <Sidebar collapsible="icon" className="border-r border-border">
           {/* Brand / Workspace Header */}
@@ -165,19 +244,22 @@ export function AppShell({ children }: AppShellProps) {
 
           {/* User Profile Footer */}
           <SidebarFooter>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton size="lg" tooltip="Aris Winandi" className="hover:bg-accent/60">
-                  <div className="flex aspect-square size-7 items-center justify-center rounded-md bg-muted text-[11px] font-mono text-foreground border border-border">
-                    AW
-                  </div>
-                  <div className="grid flex-1 text-left text-xs leading-tight">
-                    <span className="truncate font-medium text-foreground">Aris Winandi</span>
-                    <span className="truncate text-[10px] text-muted-foreground font-mono">aris@injani.internal</span>
-                  </div>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
+            <div className="flex items-center justify-between p-1.5 rounded-lg border border-border bg-card/60">
+              <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                <div className="flex aspect-square size-7 items-center justify-center rounded-md bg-muted text-[11px] font-mono text-foreground border border-border shrink-0">
+                  {profile.initials}
+                </div>
+                <div className="grid flex-1 text-left text-xs leading-tight min-w-0">
+                  <span className="truncate font-medium text-foreground">{profile.name}</span>
+                  <span className="truncate text-[10px] text-muted-foreground font-mono">{profile.email}</span>
+                </div>
+              </div>
+              <Link href="/login" title="Sign Out / Switch Identity via Gateway">
+                <Button variant="ghost" size="icon" className="size-6 text-muted-foreground hover:text-foreground shrink-0">
+                  <LogOut className="size-3.5" />
+                </Button>
+              </Link>
+            </div>
           </SidebarFooter>
         </Sidebar>
 
@@ -222,6 +304,13 @@ export function AppShell({ children }: AppShellProps) {
                 <span className="font-medium text-foreground capitalize text-xs">
                   {persona.replace("_", " ")}
                 </span>
+                <Link
+                  href="/login"
+                  title="Switch Persona via Gateway"
+                  className="ml-1 text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2"
+                >
+                  (Switch)
+                </Link>
               </div>
             </div>
           </header>
