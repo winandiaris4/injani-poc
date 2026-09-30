@@ -47,6 +47,11 @@ export interface SlaVelocityChartProps {
 export function SlaVelocityChart({ badgeLabel }: SlaVelocityChartProps = {}) {
   const [chartMode, setChartMode] = useState<"wave" | "bars">("wave");
   const [hoveredIdx, setHoveredIdx] = useState<number>(3); // Default to Thu spike
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Geometry for 7-day SVG spline wave
   const baselineY = 92;
@@ -202,7 +207,7 @@ export function SlaVelocityChart({ badgeLabel }: SlaVelocityChartProps = {}) {
               </text>
 
               {/* Spline Areas & Lines */}
-              <path d={throughputAreaPath} fill="url(#slaVelocityAreaGrad)" />
+              <path d={throughputAreaPath} fill="url(#slaVelocityAreaGrad)" className="animate-fade-area" />
               <path
                 d={throughputLinePath}
                 fill="none"
@@ -210,10 +215,10 @@ export function SlaVelocityChart({ badgeLabel }: SlaVelocityChartProps = {}) {
                 strokeWidth="2.2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-foreground"
+                className="text-foreground animate-draw-spline"
               />
 
-              <path d={breachAreaPath} fill="url(#slaVelocityBreachGrad)" />
+              <path d={breachAreaPath} fill="url(#slaVelocityBreachGrad)" className="animate-fade-area" />
               <path
                 d={breachLinePath}
                 fill="none"
@@ -222,6 +227,7 @@ export function SlaVelocityChart({ badgeLabel }: SlaVelocityChartProps = {}) {
                 strokeDasharray="3 2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                className="animate-draw-spline"
               />
 
               {/* Hover Crosshair */}
@@ -254,7 +260,8 @@ export function SlaVelocityChart({ badgeLabel }: SlaVelocityChartProps = {}) {
                       cx={pt.x}
                       cy={pt.y}
                       r={isHovered ? 4.5 : 3}
-                      className={isHovered ? "fill-foreground stroke-background stroke-2" : "fill-foreground"}
+                      className={`${isHovered ? "fill-foreground stroke-background stroke-2" : "fill-foreground"} animate-pop-marker`}
+                      style={{ animationDelay: `${250 + idx * 40}ms` }}
                     />
                     {isHovered && (
                       <circle
@@ -331,12 +338,20 @@ export function SlaVelocityChart({ badgeLabel }: SlaVelocityChartProps = {}) {
                   <div className="w-full h-16 flex flex-col justify-end gap-0.5 rounded-xs overflow-hidden">
                     {item.breached > 0 && (
                       <div
-                        style={{ height: `${breachedPx}px`, minHeight: "5px" }}
+                        style={{
+                          height: mounted ? `${breachedPx}px` : "0px",
+                          minHeight: mounted ? "5px" : "0px",
+                          transition: `height 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 40}ms`,
+                        }}
                         className="w-full bg-rose-500 transition-all group-hover:opacity-85"
                       />
                     )}
                     <div
-                      style={{ height: `${onTimePx}px`, minHeight: "8px" }}
+                      style={{
+                        height: mounted ? `${onTimePx}px` : "0px",
+                        minHeight: mounted ? "8px" : "0px",
+                        transition: `height 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 40}ms`,
+                      }}
                       className="w-full bg-foreground transition-all group-hover:opacity-85"
                     />
                   </div>
@@ -357,12 +372,15 @@ export function SlaVelocityChart({ badgeLabel }: SlaVelocityChartProps = {}) {
             <span className="font-mono text-[10px]">Avg Days</span>
           </div>
           <div className="space-y-1">
-            {departmentBottlenecks.map((d) => (
+            {departmentBottlenecks.map((d, dIdx) => (
               <div key={d.dept} className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground text-[11px] truncate w-40">{d.dept}</span>
                 <div className="flex-1 mx-3 h-1.5 rounded-full bg-muted overflow-hidden">
                   <div
-                    style={{ width: d.barWidth }}
+                    style={{
+                      width: mounted ? d.barWidth : "0%",
+                      transition: `width 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${200 + dIdx * 120}ms`,
+                    }}
                     className={`h-full rounded-full ${
                       d.status === "warning"
                         ? "bg-amber-500"

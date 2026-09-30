@@ -37,6 +37,7 @@ import {
 import { PersonaContext, PersonaType } from "@/components/layout/AppShell";
 import { initialApprovals, mockControls, mockCronSchedules, mockUserRequests } from "@/data/mockData";
 import { SlaVelocityChart } from "@/components/charts/SlaVelocityChart";
+import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 
 export default function DashboardPage() {
   const { persona } = useContext(PersonaContext);
@@ -147,7 +148,7 @@ export default function DashboardPage() {
                 <span>P1 Overdue</span>
               </div>
               <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
-                {overdueCount}
+                <AnimatedCounter value={overdueCount} />
               </div>
               <div className="text-[10px] text-rose-600 font-medium">SLA Breached</div>
             </div>
@@ -158,7 +159,7 @@ export default function DashboardPage() {
                 <span>P2 Due Today</span>
               </div>
               <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
-                {dueTodayCount}
+                <AnimatedCounter value={dueTodayCount} />
               </div>
               <div className="text-[10px] text-muted-foreground">&lt; 24h Remaining</div>
             </div>
@@ -169,7 +170,7 @@ export default function DashboardPage() {
                 <span>P3 Normal</span>
               </div>
               <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
-                8
+                <AnimatedCounter value={8} />
               </div>
               <div className="text-[10px] text-muted-foreground">Standard SLA</div>
             </div>
@@ -265,8 +266,8 @@ export default function DashboardPage() {
               </span>
               <span className="font-mono text-[10px]">Critical</span>
             </div>
-            <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
-              1 control
+            <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums flex items-baseline gap-1">
+              <AnimatedCounter value={1} /> <span>control</span>
             </div>
             <p className="text-[11px] text-muted-foreground truncate">ISO27001 Access Review (6d)</p>
           </div>
@@ -279,8 +280,8 @@ export default function DashboardPage() {
               </span>
               <span className="font-mono text-[10px]">Renewal</span>
             </div>
-            <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
-              2 controls
+            <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums flex items-baseline gap-1">
+              <AnimatedCounter value={2} /> <span>controls</span>
             </div>
             <p className="text-[11px] text-muted-foreground truncate">SOC2 &amp; GDPR Retention</p>
           </div>
@@ -371,7 +372,9 @@ export default function DashboardPage() {
                   <span className="size-1.5 rounded-full bg-foreground/60" />
                   <span className="font-medium text-foreground">In Review (Awaiting Reviewers)</span>
                 </div>
-                <span className="font-mono text-muted-foreground text-[11px]">2 active</span>
+                <span className="font-mono text-muted-foreground text-[11px]">
+                  <AnimatedCounter value={2} /> active
+                </span>
               </div>
 
               <div className="flex items-center justify-between rounded-md border border-border/80 bg-muted/20 px-3 py-2 text-xs">
@@ -379,7 +382,9 @@ export default function DashboardPage() {
                   <span className="size-1.5 rounded-full bg-foreground" />
                   <span className="font-medium text-foreground">Approved &amp; Executed (This Week)</span>
                 </div>
-                <span className="font-mono text-foreground font-semibold text-[11px]">5 completed</span>
+                <span className="font-mono text-foreground font-semibold text-[11px]">
+                  <AnimatedCounter value={5} /> completed
+                </span>
               </div>
 
               <div className="flex items-center justify-between rounded-md border border-border/80 bg-muted/20 px-3 py-2 text-xs">
@@ -387,7 +392,9 @@ export default function DashboardPage() {
                   <span className="size-1.5 rounded-full bg-muted-foreground/40" />
                   <span className="font-medium text-foreground">Draft Pipelines &amp; Templates</span>
                 </div>
-                <span className="font-mono text-muted-foreground text-[11px]">1 draft</span>
+                <span className="font-mono text-muted-foreground text-[11px]">
+                  <AnimatedCounter value={1} /> draft
+                </span>
               </div>
             </>
           )}
@@ -614,7 +621,9 @@ export default function DashboardPage() {
                   className="flex items-center gap-1.5 font-medium hover:underline text-zinc-100"
                 >
                   <span className="size-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.9)]" />
-                  <span className="font-semibold text-rose-300">{overdueCount} approvals overdue (P1)</span>
+                  <span className="font-semibold text-rose-300">
+                    <AnimatedCounter value={overdueCount} /> approvals overdue (P1)
+                  </span>
                   <span className="text-zinc-400 font-normal">— CapEx &amp; Cloud Security</span>
                 </Link>
                 <span className="text-zinc-600">•</span>
