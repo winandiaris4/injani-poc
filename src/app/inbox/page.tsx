@@ -22,6 +22,9 @@ import {
   Search,
   FileText,
   ShieldAlert,
+  ShieldCheck,
+  UserCheck,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +42,43 @@ import { initialApprovals, ApprovalItem } from "@/data/mockData";
 import { PersonaContext } from "@/components/layout/AppShell";
 import Link from "next/link";
 
+const DELEGATEE_OPTIONS = [
+  {
+    id: "dewi",
+    name: "Dewi Lestari",
+    role: "Associate VP of Finance",
+    department: "Executive Operations",
+    initials: "DL",
+    limit: "$50,000",
+    complianceStatus: "Certified Proxy",
+  },
+  {
+    id: "citra",
+    name: "Citra Maulana",
+    role: "Senior Compliance & Risk Lead",
+    department: "GRC Division",
+    initials: "CM",
+    limit: "$100,000",
+    complianceStatus: "Certified Proxy",
+  },
+  {
+    id: "bambang",
+    name: "Bambang Soediro",
+    role: "Head of IT Systems & DevOps",
+    department: "Infrastructure",
+    initials: "BS",
+    limit: "$25,000",
+    complianceStatus: "Certified Proxy",
+  },
+];
+
+const QUICK_JUSTIFICATIONS = [
+  "Temporary out-of-office delegation under ISO27001 §9.2",
+  "Specialized technical architecture evaluation required",
+  "Statutory financial threshold proxy authorization",
+  "Vendor relationship conflict of interest avoidance",
+];
+
 export default function InboxPage() {
   const { persona, profile } = React.useContext(PersonaContext);
   const [approvals, setApprovals] = useState<ApprovalItem[]>(initialApprovals);
@@ -54,9 +94,43 @@ export default function InboxPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Delegation Modal State
+  const [isDelegationModalOpen, setIsDelegationModalOpen] = useState(false);
+  const [delegatingItem, setDelegatingItem] = useState<ApprovalItem | null>(null);
+  const [selectedDelegatee, setSelectedDelegatee] = useState("dewi");
+  const [delegationReason, setDelegationReason] = useState("");
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const openDelegationModal = (item: ApprovalItem) => {
+    setDelegatingItem(item);
+    setSelectedDelegatee("dewi");
+    setDelegationReason("");
+    setIsDelegationModalOpen(true);
+  };
+
+  const confirmDelegation = () => {
+    if (!delegatingItem) return;
+    const delegateeObj = DELEGATEE_OPTIONS.find((d) => d.id === selectedDelegatee) || DELEGATEE_OPTIONS[0];
+    const auditLogId = `DEL-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const currentIndex = approvals.findIndex((a) => a.id === delegatingItem.id);
+    const updated = approvals.filter((a) => a.id !== delegatingItem.id);
+    setApprovals(updated);
+    setSelectedIds((prev) => prev.filter((id) => id !== delegatingItem.id));
+    setIsDelegationModalOpen(false);
+
+    showToast(`Request ${delegatingItem.id} delegated to ${delegateeObj.name} (Audit #${auditLogId})`);
+
+    if (updated.length > 0) {
+      const nextItem = updated[currentIndex] || updated[0];
+      setSelectedApproval(nextItem);
+    } else {
+      setSelectedApproval(null);
+    }
   };
 
   const handleAction = (
@@ -435,6 +509,16 @@ export default function InboxPage() {
                           </Button>
                           <Button
                             size="sm"
+                            variant="ghost"
+                            onClick={() => openDelegationModal(item)}
+                            className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1 border border-border/60 hover:bg-accent"
+                            title="Delegate to proxy"
+                          >
+                            <UserPlus className="size-3" />
+                            <span className="hidden xl:inline">Delegate</span>
+                          </Button>
+                          <Button
+                            size="sm"
                             variant="default"
                             onClick={() => handleAction(item.id, "approved")}
                             className="h-7 px-2 text-xs font-medium"
@@ -768,10 +852,10 @@ export default function InboxPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full text-xs gap-1 border border-border/80"
-                      onClick={() => handleAction(selectedApproval.id, "delegated")}
+                      className="w-full text-xs gap-1 border border-border/80 hover:bg-accent"
+                      onClick={() => openDelegationModal(selectedApproval)}
                     >
-                      <UserPlus className="size-3 text-muted-foreground" /> Delegate
+                      <UserPlus className="size-3 text-muted-foreground" /> Delegate Authority...
                     </Button>
                     <Button
                       variant="ghost"
@@ -798,6 +882,172 @@ export default function InboxPage() {
                 Select an approval item from the list to preview details in this drawer.
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ISO27001 / SOX Continuous Delegation Dialog Modal */}
+      {isDelegationModalOpen && delegatingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="w-full max-w-xl rounded-xl border border-border bg-background p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between pb-3 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="flex size-9 items-center justify-center rounded-lg bg-foreground text-background">
+                  <UserPlus className="size-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    Delegate Approval Authority
+                    <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded border border-border text-muted-foreground">
+                      SOX §404 / ISO27001
+                    </span>
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Assign a certified proxy to sign on your behalf with immutable cryptographic ledger tracking.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDelegationModalOpen(false)}
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            {/* Target Request Summary */}
+            <div className="rounded-lg border border-border bg-muted/30 p-3.5 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-bold text-foreground bg-background px-1.5 py-0.5 rounded border border-border/80">
+                    {delegatingItem.id}
+                  </span>
+                  <span className="font-medium text-foreground truncate max-w-xs">
+                    {delegatingItem.title}
+                  </span>
+                </div>
+                <span className="font-mono font-semibold text-foreground">
+                  {delegatingItem.amount || "N/A"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                <span>Requested by: <strong className="text-foreground">{delegatingItem.requester.name}</strong></span>
+                <span>•</span>
+                <span>{delegatingItem.requester.department}</span>
+                <span>•</span>
+                <span className="font-mono text-[10px] text-rose-600 bg-rose-50 px-1 py-0.2 rounded border border-rose-200">
+                  {delegatingItem.priority} • {delegatingItem.slaCountdown}
+                </span>
+              </div>
+            </div>
+
+            {/* Step 1: Select Delegatee */}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-foreground flex items-center justify-between">
+                <span>1. Select Authorized Proxy Delegatee</span>
+                <span className="text-[10px] font-normal text-muted-foreground">Co-signatory limit enforced</span>
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {DELEGATEE_OPTIONS.map((del) => {
+                  const isSelected = selectedDelegatee === del.id;
+                  return (
+                    <div
+                      key={del.id}
+                      onClick={() => setSelectedDelegatee(del.id)}
+                      className={`cursor-pointer rounded-lg border p-2.5 transition-all text-xs space-y-1.5 ${
+                        isSelected
+                          ? "border-foreground bg-accent text-foreground shadow-2xs"
+                          : "border-border bg-card hover:border-foreground/30 hover:bg-muted/40"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex size-6 items-center justify-center rounded bg-muted text-[10px] font-mono font-bold text-foreground border border-border">
+                          {del.initials}
+                        </div>
+                        {isSelected ? (
+                          <CheckCircle2 className="size-3.5 text-foreground" />
+                        ) : (
+                          <span className="font-mono text-[9px] text-muted-foreground">Limit: {del.limit}</span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-xs leading-tight truncate">{del.name}</div>
+                        <div className="text-[10px] text-muted-foreground truncate">{del.role}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Step 2: Mandatory Audit Justification */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <span>2. Mandatory Audit Justification</span>
+                  <span className="text-rose-500 font-bold">*</span>
+                </label>
+                <span className="text-[10px] font-mono text-muted-foreground">
+                  {delegationReason.trim().length > 0 ? "✓ Verified" : "Required for SOX log"}
+                </span>
+              </div>
+
+              {/* Quick Template Chips */}
+              <div className="flex flex-wrap gap-1.5">
+                {QUICK_JUSTIFICATIONS.map((quick) => (
+                  <button
+                    key={quick}
+                    type="button"
+                    onClick={() => setDelegationReason(quick)}
+                    className="text-[10px] px-2 py-0.5 rounded-full border border-border bg-muted/40 hover:bg-accent hover:border-foreground/40 text-muted-foreground hover:text-foreground transition-colors text-left"
+                  >
+                    + {quick}
+                  </button>
+                ))}
+              </div>
+
+              <textarea
+                rows={2}
+                value={delegationReason}
+                onChange={(e) => setDelegationReason(e.target.value)}
+                placeholder="State the regulatory business rationale for transferring sign-off authority (e.g. Approved leave coverage under POL-SEC-04)..."
+                className="w-full rounded-md border border-input bg-background p-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
+              />
+            </div>
+
+            {/* Audit Trail Cryptographic Attestation Note */}
+            <div className="flex items-start gap-2.5 rounded-md border border-border/80 bg-muted/20 p-2.5 text-[11px] text-muted-foreground">
+              <ShieldCheck className="size-4 text-foreground shrink-0 mt-0.5" />
+              <div>
+                <span className="font-medium text-foreground">Immutable Audit Ledger: </span>
+                This action creates an immutable log event with your digital signature ({profile.email}). The delegatee will be immediately notified via internal dispatch.
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
+                onClick={() => setIsDelegationModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                disabled={delegationReason.trim().length === 0}
+                className="h-8 text-xs gap-1.5 font-medium"
+                onClick={confirmDelegation}
+              >
+                <UserCheck className="size-3.5" />
+                Confirm &amp; Record Delegation
+              </Button>
+            </div>
           </div>
         </div>
       )}

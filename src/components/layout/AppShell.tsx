@@ -20,6 +20,11 @@ import {
   ShieldAlert,
   Cpu,
   LogOut,
+  AlertTriangle,
+  Clock,
+  ExternalLink,
+  X,
+  Check,
 } from "lucide-react";
 import {
   Sidebar,
@@ -145,12 +150,184 @@ function getNavItems(persona: PersonaType) {
   }
 }
 
+export interface AppNotification {
+  id: string;
+  persona: PersonaType;
+  title: string;
+  description: string;
+  time: string;
+  category: string;
+  priority: "urgent" | "warning" | "info" | "success";
+  actionHref: string;
+  actionLabel: string;
+}
+
+export const INITIAL_NOTIFICATIONS: AppNotification[] = [
+  // Approver
+  {
+    id: "notif-app-1",
+    persona: "approver",
+    title: "P1 SLA Breached: REQ-2026-081",
+    description: "AWS Direct Connect 10Gbps ($42,000) exceeded 2h SLA threshold. Immediate review required.",
+    time: "8m ago",
+    category: "P1 SLA Breach",
+    priority: "urgent",
+    actionHref: "/inbox",
+    actionLabel: "Triage in Inbox",
+  },
+  {
+    id: "notif-app-2",
+    persona: "approver",
+    title: "Delegation Request from Dewi Lestari",
+    description: "Dewi Lestari requested approval delegation authority for 5 CapEx batches during financial closeout.",
+    time: "42m ago",
+    category: "Delegation",
+    priority: "warning",
+    actionHref: "/inbox",
+    actionLabel: "Review Delegation",
+  },
+  {
+    id: "notif-app-3",
+    persona: "approver",
+    title: "Quarterly ISO27001 Access Audit Due",
+    description: "Executive attestation required for 14 privileged IAM access grants within 7 days.",
+    time: "2h ago",
+    category: "Audit Milestone",
+    priority: "info",
+    actionHref: "/compliance",
+    actionLabel: "View Controls",
+  },
+
+  // Requester
+  {
+    id: "notif-req-1",
+    persona: "requester",
+    title: "Stage 1 Cleared: CapEx REQ-2026-881",
+    description: "Department Head has signed off on $128,000 GPU Cluster Expansion. Now awaiting VP Ops signature.",
+    time: "15m ago",
+    category: "Workflow Stage",
+    priority: "success",
+    actionHref: "/workflows",
+    actionLabel: "Track Chain",
+  },
+  {
+    id: "notif-req-2",
+    persona: "requester",
+    title: "Datadog License Provisioned",
+    description: "IT Infrastructure auto-assigned 12 Enterprise APM seats requested under REQ-2026-077.",
+    time: "3h ago",
+    category: "Provisioning",
+    priority: "success",
+    actionHref: "/workflows",
+    actionLabel: "View Details",
+  },
+  {
+    id: "notif-req-3",
+    persona: "requester",
+    title: "Unsubmitted Draft Saved",
+    description: "Draft for Snowflake Data Warehouse expansion was auto-saved yesterday at 18:40.",
+    time: "Yesterday",
+    category: "Draft",
+    priority: "info",
+    actionHref: "/workflows",
+    actionLabel: "Resume Draft",
+  },
+
+  // Control Owner
+  {
+    id: "notif-ctrl-1",
+    persona: "control_owner",
+    title: "ISO27001 Access Review Expiry Window",
+    description: "Continuous control ISO-A.9.2 expires in 6 days. Risk index elevated to 8.4 until re-attested.",
+    time: "1h ago",
+    category: "Policy Renewal",
+    priority: "urgent",
+    actionHref: "/compliance",
+    actionLabel: "Start Renewal",
+  },
+  {
+    id: "notif-ctrl-2",
+    persona: "control_owner",
+    title: "SOC2 Automated Telemetry Sweep",
+    description: "24 of 24 zero-touch telemetry probes passed continuous verification. 0 drift detected.",
+    time: "4h ago",
+    category: "Evidence Verification",
+    priority: "success",
+    actionHref: "/compliance",
+    actionLabel: "Inspect Evidence",
+  },
+  {
+    id: "notif-ctrl-3",
+    persona: "control_owner",
+    title: "IAM Policy Drift Detected",
+    description: "Staging cluster added unmapped service account outside Terraform drift baseline.",
+    time: "6h ago",
+    category: "GRC Radar",
+    priority: "warning",
+    actionHref: "/compliance",
+    actionLabel: "Review Drift",
+  },
+
+  // Automation Owner
+  {
+    id: "notif-auto-1",
+    persona: "automation_owner",
+    title: "GRC Sweep Completed (142ms)",
+    description: "Daily midnight continuous integrity sweep completed in 142ms. 24 controls verified green.",
+    time: "25m ago",
+    category: "Cron Telemetry",
+    priority: "success",
+    actionHref: "/compliance",
+    actionLabel: "View Sweep Log",
+  },
+  {
+    id: "notif-auto-2",
+    persona: "automation_owner",
+    title: "Weekly SOC2 Sweep Scheduled Tonight",
+    description: "Next scheduled engine run at 00:00 UTC tonight (Cron: 0 0 * * 0).",
+    time: "2h ago",
+    category: "Scheduled Job",
+    priority: "info",
+    actionHref: "/compliance",
+    actionLabel: "Trigger Run Now",
+  },
+  {
+    id: "notif-auto-3",
+    persona: "automation_owner",
+    title: "Daemon Health All Green",
+    description: "4 of 4 background sync workers healthy. Memory pressure nominal at 38%.",
+    time: "5h ago",
+    category: "Daemon Monitor",
+    priority: "success",
+    actionHref: "/insights",
+    actionLabel: "Check Telemetry",
+  },
+];
+
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const [persona, setPersonaState] = useState<PersonaType>("approver");
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
+  const notificationRef = React.useRef<HTMLDivElement>(null);
 
   const navItems = getNavItems(persona);
+
+  // Close notifications on outside click
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setIsNotificationOpen(false);
+      }
+    }
+    if (isNotificationOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isNotificationOpen]);
 
   // Sync with localStorage on client mount
   React.useEffect(() => {
@@ -174,6 +351,18 @@ export function AppShell({ children }: AppShellProps) {
   };
 
   const profile = PERSONA_PROFILES[persona] || PERSONA_PROFILES.approver;
+
+  const currentNotifications = INITIAL_NOTIFICATIONS.filter((n) => n.persona === persona);
+  const unreadNotifications = currentNotifications.filter((n) => !readNotificationIds.includes(n.id));
+  const unreadCount = unreadNotifications.length;
+
+  const markAllAsRead = () => {
+    setReadNotificationIds((prev) => Array.from(new Set([...prev, ...currentNotifications.map((n) => n.id)])));
+  };
+
+  const markOneAsRead = (id: string) => {
+    setReadNotificationIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  };
 
   // Dedicated standalone view for login / identity gateway
   if (pathname === "/login") {
@@ -331,10 +520,182 @@ export function AppShell({ children }: AppShellProps) {
                 <span className="hidden sm:inline">Customize Cockpit</span>
               </Button>
 
-              <Button variant="ghost" size="icon" className="relative size-7 text-muted-foreground hover:text-foreground">
-                <Bell className="size-3.5" />
-                <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-rose-500" />
-              </Button>
+              {/* Notification Center Dropdown */}
+              <div className="relative" ref={notificationRef}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsNotificationOpen((prev) => !prev)}
+                  className={`relative size-7 transition-colors ${
+                    isNotificationOpen
+                      ? "bg-accent text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  aria-label="Activity & Notifications"
+                  title="Activity & Notifications"
+                >
+                  <Bell className="size-3.5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex size-3 items-center justify-center">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-60" />
+                      <span className="relative flex size-2 rounded-full bg-rose-500" />
+                    </span>
+                  )}
+                </Button>
+
+                {isNotificationOpen && (
+                  <div className="absolute right-0 top-9 mt-1.5 w-80 sm:w-96 rounded-xl border border-border bg-background shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-border bg-muted/40">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                          <Bell className="size-3.5 text-foreground" />
+                          Activity Stream
+                        </span>
+                        <span
+                          className={`font-mono text-[10px] px-1.5 py-0.5 rounded border ${
+                            unreadCount > 0
+                              ? "bg-rose-500/10 text-rose-600 border-rose-500/20 font-semibold"
+                              : "bg-muted text-muted-foreground border-border"
+                          }`}
+                        >
+                          {unreadCount > 0 ? `${unreadCount} unread` : "All read"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {unreadCount > 0 && (
+                          <button
+                            type="button"
+                            onClick={markAllAsRead}
+                            className="text-[11px] text-muted-foreground hover:text-foreground hover:underline flex items-center gap-1 px-1.5 py-0.5 rounded transition-colors"
+                          >
+                            <Check className="size-3" />
+                            Mark read
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setIsNotificationOpen(false)}
+                          className="text-muted-foreground hover:text-foreground p-1 rounded hover:bg-muted transition-colors"
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Active Perspective Context Strip */}
+                    <div className="flex items-center justify-between px-3.5 py-1.5 bg-muted/20 border-b border-border/60 text-[10px] text-muted-foreground font-mono">
+                      <span className="truncate max-w-[220px]">Role: {profile.roleTitle}</span>
+                      <span className="uppercase text-[9px] font-semibold text-foreground/80 tracking-wider">
+                        {persona.replace("_", " ")}
+                      </span>
+                    </div>
+
+                    {/* Notifications List */}
+                    <div className="max-h-[360px] overflow-y-auto divide-y divide-border/50">
+                      {currentNotifications.length === 0 ? (
+                        <div className="p-6 text-center text-xs text-muted-foreground">
+                          No notifications available.
+                        </div>
+                      ) : (
+                        currentNotifications.map((notif) => {
+                          const isUnread = !readNotificationIds.includes(notif.id);
+                          return (
+                            <div
+                              key={notif.id}
+                              className={`p-3 transition-colors ${
+                                isUnread
+                                  ? "bg-accent/40 hover:bg-accent/70"
+                                  : "bg-background hover:bg-muted/30 opacity-80 hover:opacity-100"
+                              }`}
+                            >
+                              <div className="flex items-start gap-2.5">
+                                <div className="mt-0.5 shrink-0">
+                                  {notif.priority === "urgent" && (
+                                    <div className="size-6 rounded-md bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-600">
+                                      <AlertTriangle className="size-3.5" />
+                                    </div>
+                                  )}
+                                  {notif.priority === "warning" && (
+                                    <div className="size-6 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600">
+                                      <Clock className="size-3.5" />
+                                    </div>
+                                  )}
+                                  {notif.priority === "success" && (
+                                    <div className="size-6 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600">
+                                      <CheckCircle2 className="size-3.5" />
+                                    </div>
+                                  )}
+                                  {notif.priority === "info" && (
+                                    <div className="size-6 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600">
+                                      <ShieldAlert className="size-3.5" />
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex-1 min-w-0 space-y-1">
+                                  <div className="flex items-center justify-between gap-1">
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                      <span
+                                        className={`text-xs leading-snug truncate ${
+                                          isUnread
+                                            ? "font-semibold text-foreground"
+                                            : "font-medium text-foreground/80"
+                                        }`}
+                                      >
+                                        {notif.title}
+                                      </span>
+                                      {isUnread && (
+                                        <span className="size-1.5 rounded-full bg-rose-500 shrink-0" />
+                                      )}
+                                    </div>
+                                    <span className="font-mono text-[10px] text-muted-foreground shrink-0">
+                                      {notif.time}
+                                    </span>
+                                  </div>
+
+                                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                    {notif.description}
+                                  </p>
+
+                                  <div className="flex items-center justify-between pt-1">
+                                    <span className="font-mono text-[9px] text-muted-foreground/90 uppercase tracking-wide">
+                                      {notif.category}
+                                    </span>
+                                    <Link
+                                      href={notif.actionHref}
+                                      onClick={() => {
+                                        markOneAsRead(notif.id);
+                                        setIsNotificationOpen(false);
+                                      }}
+                                      className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-foreground hover:underline"
+                                    >
+                                      {notif.actionLabel}
+                                      <ExternalLink className="size-2.5" />
+                                    </Link>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-3.5 py-2 border-t border-border bg-muted/20 flex items-center justify-between text-[10px] text-muted-foreground">
+                      <span>Real-time Event Stream</span>
+                      <Link
+                        href="/compliance"
+                        onClick={() => setIsNotificationOpen(false)}
+                        className="hover:text-foreground underline underline-offset-2"
+                      >
+                        Audit Logs →
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <Separator orientation="vertical" className="h-4" />
 
