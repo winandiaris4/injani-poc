@@ -39,7 +39,8 @@ export const AnnotationTourCard: React.FC = () => {
           <div>
             <div className="flex items-center gap-1.5">
               <span className="font-mono text-[10px] uppercase tracking-wider font-semibold text-blue-600 dark:text-blue-400">
-                Key {activeAnnotation.stepNumber} of 5
+                Key {activeAnnotation.stepNumber} of {CHALLENGE_ANNOTATIONS.length}
+                {activeAnnotation.stepNumber > 5 && " • Bonus"}
               </span>
               <span className="text-muted-foreground text-xs">•</span>
               <span className="text-xs font-semibold text-foreground">

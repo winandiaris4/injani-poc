@@ -32,6 +32,8 @@ import {
 } from "@/components/ui/table";
 import { PersonaContext } from "@/components/layout/AppShell";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
+import { AnnotationPin } from "@/components/annotations/AnnotationPin";
+import { useAnnotation } from "@/contexts/AnnotationContext";
 
 interface DepartmentMetric {
   dept: string;
@@ -159,6 +161,20 @@ export default function InsightsPage() {
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  const { setOnActionTrigger } = useAnnotation();
+
+  // Listen to annotation triggers (e.g. Key 9 Inspect Stage Bottlenecks)
+  React.useEffect(() => {
+    return setOnActionTrigger((actionType: string, payload?: string) => {
+      if (actionType === "scroll_bottlenecks") {
+        const el = document.getElementById(payload || "stage-bottlenecks");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    });
+  }, [setOnActionTrigger]);
 
   // SVG Area Spline Calculations
   const baselineY = 120;
@@ -556,12 +572,13 @@ export default function InsightsPage() {
         </Card>
 
         {/* CHART 2: REVIEW STAGE TURNAROUND BOTTLENECK RADAR */}
-        <Card className="lg:col-span-6 border-border shadow-2xs">
+        <Card id="stage-bottlenecks" className="lg:col-span-6 border-border shadow-2xs scroll-mt-16">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
               <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                 <Clock className="size-3.5 text-muted-foreground" />
-                Review Stage Cycle Times &amp; Bottlenecks
+                <span>Review Stage Cycle Times &amp; Bottlenecks</span>
+                <AnnotationPin pinId="key-9" label="Key 9: Telemetry" />
               </CardTitle>
               <CardDescription className="text-xs text-foreground font-medium mt-0.5">
                 Average duration spent at each sign-off tier

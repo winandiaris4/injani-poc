@@ -38,28 +38,59 @@ export const EvaluationWelcomeModal: React.FC = () => {
           </p>
         </div>
 
-        {/* 4 Keys Summary Preview */}
-        <div className="rounded-xl border border-border/60 bg-muted/30 p-3.5 space-y-2 text-xs">
-          <div className="font-semibold text-foreground flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">
-            <Compass className="size-3.5 text-blue-500" />
-            <span>Interactive Architecture Tour Highlights:</span>
+        {/* 5 Core Keys + 4 Strategic Bonuses Preview */}
+        <div className="rounded-xl border border-border/60 bg-muted/30 p-3.5 space-y-2.5 text-xs">
+          <div>
+            <div className="font-semibold text-foreground flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground pb-1">
+              <Compass className="size-3 text-blue-500" />
+              <span>Phase 2 Core Challenge Keys (❶–❺):</span>
+            </div>
+            <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-blue-600 dark:text-blue-400">❶</span>
+                <span>5 Intent Groups vs. 8 Flat Modules</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-blue-600 dark:text-blue-400">❷</span>
+                <span>Sticky Urgent Bar (Fire Alarm)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-blue-600 dark:text-blue-400">❸</span>
+                <span>3-Tier Persona Customization</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-blue-600 dark:text-blue-400">❹</span>
+                <span>Slide-Over Batch Approvals</span>
+              </div>
+              <div className="flex items-center gap-1.5 col-span-2">
+                <span className="font-bold text-blue-600 dark:text-blue-400">❺</span>
+                <span>Continuous Controls &amp; Cryptographic SHA-256 Proofs</span>
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-blue-600 dark:text-blue-400">❶</span>
-              <span>5 Intent Groups vs. 8 Flat Modules</span>
+
+          <div className="pt-1.5 border-t border-border/40">
+            <div className="font-semibold text-foreground flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground pb-1">
+              <Sparkles className="size-3 text-blue-500" />
+              <span>Strategic Architecture Bonuses (❻–❾):</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-blue-600 dark:text-blue-400">❷</span>
-              <span>Sticky Urgent Bar (Fire Alarm)</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-blue-600 dark:text-blue-400">❸</span>
-              <span>3-Tier Persona Customization</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-blue-600 dark:text-blue-400">❹</span>
-              <span>Slide-Over Batch Approvals</span>
+            <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-blue-600 dark:text-blue-400">❻</span>
+                <span>Shift-Left Smart Form (SOX §404)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-blue-600 dark:text-blue-400">❼</span>
+                <span>Power-User ⌘K Command Omnibox</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-blue-600 dark:text-blue-400">❽</span>
+                <span>Out-of-Office Delegation (ISO §9.2)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-blue-600 dark:text-blue-400">❾</span>
+                <span>Process Mining &amp; Cycle-Time Radar</span>
+              </div>
             </div>
           </div>
         </div>

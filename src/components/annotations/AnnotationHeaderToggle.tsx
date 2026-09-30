@@ -30,7 +30,7 @@ export const AnnotationHeaderToggle: React.FC = () => {
         size="sm"
         onClick={startGuidedTour}
         className="h-7 px-2 text-[11px] font-medium text-muted-foreground hover:text-foreground gap-1 hidden md:flex cursor-pointer"
-        title="Start 4-Key Guided Tour"
+        title="Start 9-Key Guided Tour"
       >
         <Compass className="size-3.5 text-blue-500" />
         <span>Tour</span>

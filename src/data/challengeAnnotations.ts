@@ -11,7 +11,16 @@ export interface ChallengeAnnotation {
   defenseDocRef: string;
   targetPage: string;
   actionLabel?: string;
-  actionType?: "navigate" | "switch_persona" | "open_drawer" | "open_cert" | "scroll_radar";
+  actionType?:
+    | "navigate"
+    | "switch_persona"
+    | "open_drawer"
+    | "open_cert"
+    | "scroll_radar"
+    | "open_smart_form"
+    | "open_command_palette"
+    | "open_delegation"
+    | "scroll_bottlenecks";
   actionPayload?: string;
 }
 
@@ -115,5 +124,85 @@ export const CHALLENGE_ANNOTATIONS: ChallengeAnnotation[] = [
     actionLabel: "View Cryptographic SHA-256 Certificate",
     actionType: "open_cert",
     actionPayload: "modal",
+  },
+  {
+    id: "key-6",
+    stepNumber: 6,
+    badgeSymbol: "❻",
+    title: "Shift-Left Governance: Smart Form & Dynamic Policy Engine",
+    category: "Initiation & Policy-as-Code",
+    officialPrompt:
+      '"How does the platform prevent non-compliant requests from entering the system in the first place, rather than catching violations retroactively?"',
+    designDecision:
+      "Embedded a reactive Policy-as-Code engine directly inside the Smart Request Initiation Form (/workflows). Adjusting the budget threshold (≥ $5,000) or selecting 'Production' instantly triggers real-time SOX §404 compliance rules and injects mandatory executive sign-offs before submission.",
+    psychologicalRationale:
+      "Traditional enterprise governance relies on passive PDF policies that employees rarely read, resulting in compliance violations discovered only during stressful annual audits. By shifting compliance 'left' directly into the requester's initiation experience, the system provides real-time feedback with zero friction, transforming compliance from a post-mortem bottleneck into an active guardrail.",
+    rejectedAlternative:
+      "A static, unconditional form where requesters manually select their own approvers from a dropdown. This invites accidental under-authorization, intentional circumventing of SOX 404 thresholds, and massive audit exposure.",
+    defenseDocRef: "MASTER_DEFENSE_AND_ANALYSIS.md — Section 3.1 & 8.2",
+    targetPage: "/workflows",
+    actionLabel: "Open Smart Request Form (SOX §404)",
+    actionType: "open_smart_form",
+    actionPayload: "tpl-capex",
+  },
+  {
+    id: "key-7",
+    stepNumber: 7,
+    badgeSymbol: "❼",
+    title: "Power-User Velocity: Global Command Console (⌘K)",
+    category: "Keyboard-First & Omnibox Access",
+    officialPrompt:
+      '"How do power users with high-volume workloads navigate between disparate operational duties without experiencing navigation fatigue?"',
+    designDecision:
+      "Built a universal Command Palette (accessible via ⌘K / Ctrl+K or search bar) providing immediate fuzzy-search access across pending approvals, controls, persona switching, and automated sweeps.",
+    psychologicalRationale:
+      "High-velocity operators and C-level approvers suffer severe context exhaustion from repetitive multi-click menu navigation. A keyboard-first Omnibox adheres to the Principle of Least Astonishment, allowing an operator to execute critical actions (e.g., 'Switch to Requester', 'Inspect P1 Overdue SLA', 'Run Scheduled Sweeps') in under 300ms without lifting their hands from the keyboard.",
+    rejectedAlternative:
+      "Restricting navigation strictly to hierarchical sidebar menus and breadcrumbs. Power users find mouse-dependent navigation sluggish, leading to frustration and workflow delays.",
+    defenseDocRef: "MASTER_DEFENSE_AND_ANALYSIS.md — Section 2.1 & 7.1",
+    targetPage: "/",
+    actionLabel: "Launch ⌘K Command Console",
+    actionType: "open_command_palette",
+    actionPayload: "open",
+  },
+  {
+    id: "key-8",
+    stepNumber: 8,
+    badgeSymbol: "❽",
+    title: "Out-of-Office Resilience: Certified Approval Delegation (ISO 27001 §9.2)",
+    category: "Operational Continuity & Audit Trails",
+    officialPrompt:
+      '"What happens when a primary executive approver is unavailable? How do you prevent SLA bottlenecks without compromising governance boundaries?"',
+    designDecision:
+      "Implemented a time-bound, limit-enforced Approval Delegation Protocol in /inbox with certified proxy candidates (e.g. Dewi Lestari up to $50,000, Citra Maulana up to $100,000) backed by mandatory audit justifications.",
+    psychologicalRationale:
+      "In high-pressure enterprise environments, executive travel or out-of-office status is the #1 cause of catastrophic 2-hour SLA breaches. Simple email forwarding or ad-hoc credential sharing violates ISO 27001 §9.2 and Sarbanes-Oxley. Certified proxy delegation preserves operational continuity while maintaining an unbroken, tamper-evident cryptographic chain of custody.",
+    rejectedAlternative:
+      "Allowing unconstrained delegation to any colleague or allowing approvals to stall indefinitely until the primary reviewer returns. Both lead either to critical SLA failure or severe regulatory penalties.",
+    defenseDocRef: "MASTER_DEFENSE_AND_ANALYSIS.md — Section 2.4 & 4.3",
+    targetPage: "/inbox",
+    actionLabel: "Open Certified Delegation Modal",
+    actionType: "open_delegation",
+    actionPayload: "first",
+  },
+  {
+    id: "key-9",
+    stepNumber: 9,
+    badgeSymbol: "❾",
+    title: "Process Mining: Cycle-Time Bottleneck Diagnostics",
+    category: "Continuous Improvement & Telemetry",
+    officialPrompt:
+      '"How does the platform transition from reactive approval processing to proactive operational optimization?"',
+    designDecision:
+      "Integrated telemetry and stage duration diagnostics in /insights, exposing exact cycle-time distribution across review tiers (Legal Review taking 3.8 days vs. IT Security at 0.7 days).",
+    psychologicalRationale:
+      "Executives and operations leaders don't just want to approve requests—they need to eliminate systemic latency. By surfacing stage-specific bottlenecks directly alongside SLA adherence distributions, the platform shifts from an operational task queue into a strategic Business Process Optimization platform.",
+    rejectedAlternative:
+      "Presenting only aggregate pass/fail percentages without stage breakdown. Leadership remains blind to which specific department or stage is causing systemic business delay.",
+    defenseDocRef: "MASTER_DEFENSE_AND_ANALYSIS.md — Section 2.2 & 6.1",
+    targetPage: "/insights",
+    actionLabel: "Inspect Stage Bottlenecks",
+    actionType: "scroll_bottlenecks",
+    actionPayload: "stage-bottlenecks",
   },
 ];

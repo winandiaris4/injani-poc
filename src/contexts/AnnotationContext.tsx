@@ -64,6 +64,10 @@ export const AnnotationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const openPin = (id: string) => {
     setIsAnnotationMode(true);
     setActivePinId(id);
+    const ann = CHALLENGE_ANNOTATIONS.find((a) => a.id === id);
+    if (ann?.targetPage && pathname !== ann.targetPage) {
+      router.push(ann.targetPage);
+    }
   };
 
   const closePin = () => {
@@ -120,12 +124,12 @@ export const AnnotationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const listenersRef = React.useRef<Set<(actionType: string, payload?: string) => void>>(new Set());
 
-  const setOnActionTrigger = (callback: (actionType: string, payload?: string) => void) => {
+  const setOnActionTrigger = React.useCallback((callback: (actionType: string, payload?: string) => void) => {
     listenersRef.current.add(callback);
     return () => {
       listenersRef.current.delete(callback);
     };
-  };
+  }, []);
 
   const executeAnnotationAction = (annotation: ChallengeAnnotation) => {
     listenersRef.current.forEach((cb) => {

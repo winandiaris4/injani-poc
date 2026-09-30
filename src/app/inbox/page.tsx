@@ -97,13 +97,18 @@ export default function InboxPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const { setOnActionTrigger } = useAnnotation();
 
-  // Listen to annotation actions (e.g. Key 4 Open Slide-Over Batch Drawer)
+  // Listen to annotation actions (e.g. Key 4 Open Slide-Over Batch Drawer & Key 8 Delegation)
   React.useEffect(() => {
     return setOnActionTrigger((actionType: string, payload?: string) => {
       if (actionType === "open_drawer") {
         setViewMode("split");
         if (payload === "first" && approvals.length > 0) {
           setSelectedApproval(approvals[0]);
+        }
+      }
+      if (actionType === "open_delegation") {
+        if (approvals.length > 0) {
+          openDelegationModal(approvals[0]);
         }
       }
     });
@@ -439,7 +444,7 @@ export default function InboxPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredApprovals.map((item) => {
+                filteredApprovals.map((item, idx) => {
                   const isChecked = selectedIds.includes(item.id);
                   return (
                     <TableRow
@@ -533,6 +538,9 @@ export default function InboxPage() {
                             <UserPlus className="size-3" />
                             <span className="hidden xl:inline">Delegate</span>
                           </Button>
+                          {idx === 0 && (
+                            <AnnotationPin pinId="key-8" label="Key 8: Delegation" className="ml-1" />
+                          )}
                           <Button
                             size="sm"
                             variant="default"
@@ -865,14 +873,17 @@ export default function InboxPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full text-xs gap-1 border border-border/80 hover:bg-accent"
-                      onClick={() => openDelegationModal(selectedApproval)}
-                    >
-                      <UserPlus className="size-3 text-muted-foreground" /> Delegate Authority...
-                    </Button>
+                    <div className="relative inline-flex items-center w-full">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-xs gap-1 border border-border/80 hover:bg-accent"
+                        onClick={() => openDelegationModal(selectedApproval)}
+                      >
+                        <UserPlus className="size-3 text-muted-foreground" /> Delegate Authority...
+                      </Button>
+                      <AnnotationPin pinId="key-8" label="Key 8: Delegation" className="ml-1 shrink-0" />
+                    </div>
                     <Button
                       variant="ghost"
                       size="sm"

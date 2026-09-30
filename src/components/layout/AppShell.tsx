@@ -332,6 +332,9 @@ function AppShellInner({ children }: AppShellProps) {
           el.scrollIntoView({ behavior: "smooth" });
         }
       }
+      if (actionType === "open_command_palette") {
+        setIsCommandPaletteOpen(true);
+      }
     });
   }, [setOnActionTrigger]);
 
@@ -538,6 +541,7 @@ function AppShellInner({ children }: AppShellProps) {
                   ⌘K
                 </kbd>
               </div>
+              <AnnotationPin pinId="key-7" label="Key 7: ⌘K" className="hidden md:inline-flex" />
             </div>
 
             <div className="flex items-center gap-2">

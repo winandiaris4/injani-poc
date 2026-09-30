@@ -26,6 +26,8 @@ import { mockWorkflowCatalog, mockCronSchedules, mockUserRequests, UserSubmitted
 import { PersonaContext } from "@/components/layout/AppShell";
 import { RequestInitiationDialog } from "@/components/workflows/RequestInitiationDialog";
 import { AuditCertificateModal } from "@/components/compliance/AuditCertificateModal";
+import { AnnotationPin } from "@/components/annotations/AnnotationPin";
+import { useAnnotation } from "@/contexts/AnnotationContext";
 
 export default function WorkflowsPage() {
   const { persona, profile } = React.useContext(PersonaContext);
@@ -60,6 +62,18 @@ export default function WorkflowsPage() {
     setSelectedTemplateId(templateId || null);
     setIsInitiationDialogOpen(true);
   };
+
+  const { setOnActionTrigger } = useAnnotation();
+
+  // Listen to annotation triggers (e.g. Key 6 Open Smart Request Form)
+  React.useEffect(() => {
+    return setOnActionTrigger((actionType: string, payload?: string) => {
+      if (actionType === "open_smart_form") {
+        setModuleView("catalog");
+        handleOpenInitiation(payload || "tpl-capex");
+      }
+    });
+  }, [setOnActionTrigger]);
 
   const handleNewRequestSubmitted = (newReq: UserSubmittedRequest) => {
     setMyRequests((prev) => [newReq, ...prev]);
@@ -151,6 +165,7 @@ export default function WorkflowsPage() {
             <span className="font-mono text-[10px] bg-muted text-muted-foreground border border-border px-1.5 py-0.5 rounded uppercase">
               {moduleView === "catalog" ? "Catalog Mode" : "Personal Submissions"}
             </span>
+            <AnnotationPin pinId="key-6" label="Key 6: Shift-Left" />
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
             {moduleView === "catalog"
