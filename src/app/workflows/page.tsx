@@ -25,6 +25,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { mockWorkflowCatalog, mockCronSchedules, mockUserRequests, UserSubmittedRequest } from "@/data/mockData";
 import { PersonaContext } from "@/components/layout/AppShell";
 import { RequestInitiationDialog } from "@/components/workflows/RequestInitiationDialog";
+import { AuditCertificateModal } from "@/components/compliance/AuditCertificateModal";
 
 export default function WorkflowsPage() {
   const { persona, profile } = React.useContext(PersonaContext);
@@ -45,6 +46,15 @@ export default function WorkflowsPage() {
   // Smart Request Initiation Dialog State
   const [isInitiationDialogOpen, setIsInitiationDialogOpen] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+
+  // Compliance Audit Certificate Modal State
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+  const [selectedCertRequest, setSelectedCertRequest] = useState<UserSubmittedRequest | null>(null);
+
+  const handleOpenCertModal = (req: UserSubmittedRequest) => {
+    setSelectedCertRequest(req);
+    setIsCertModalOpen(true);
+  };
 
   const handleOpenInitiation = (templateId?: string) => {
     setSelectedTemplateId(templateId || null);
@@ -734,8 +744,8 @@ export default function WorkflowsPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 text-xs gap-1"
-                              onClick={() => showToast(`Full audit report exported for ${req.id}`)}
+                              className="h-7 text-xs gap-1 hover:bg-accent text-foreground"
+                              onClick={() => handleOpenCertModal(req)}
                             >
                               Export PDF Audit Package <ArrowUpRight className="size-3" />
                             </Button>
@@ -758,6 +768,13 @@ export default function WorkflowsPage() {
         initialTemplateId={selectedTemplateId}
         onSubmitRequest={handleNewRequestSubmitted}
         onSaveDraft={handleSaveDraft}
+      />
+
+      {/* Formal Audit Attestation Certificate Modal */}
+      <AuditCertificateModal
+        open={isCertModalOpen}
+        onOpenChange={setIsCertModalOpen}
+        request={selectedCertRequest}
       />
     </div>
   );

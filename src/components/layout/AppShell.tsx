@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { CommandPalette } from "@/components/layout/CommandPalette";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -309,6 +310,7 @@ export function AppShell({ children }: AppShellProps) {
   const [persona, setPersonaState] = useState<PersonaType>("approver");
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
   const notificationRef = React.useRef<HTMLDivElement>(null);
 
@@ -498,14 +500,21 @@ export function AppShell({ children }: AppShellProps) {
             <div className="flex items-center gap-3">
               <SidebarTrigger className="-ml-1 size-7 text-muted-foreground hover:text-foreground" />
               <Separator orientation="vertical" className="h-4" />
-              <div className="relative hidden md:flex items-center w-72">
-                <Search className="absolute left-2.5 size-3.5 text-muted-foreground" />
+              <div
+                onClick={() => setIsCommandPaletteOpen(true)}
+                className="relative hidden md:flex items-center w-72 cursor-pointer group"
+                title="Open Command Console (⌘K)"
+              >
+                <Search className="absolute left-2.5 size-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
                 <input
                   type="text"
                   placeholder="Search approvals, controls, workflows... (⌘K)"
                   readOnly
-                  className="h-7 w-full rounded-md border border-input bg-muted/30 pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
+                  className="h-7 w-full rounded-md border border-input bg-muted/30 pl-8 pr-12 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none cursor-pointer group-hover:border-foreground/40 group-hover:bg-accent/40 transition-colors"
                 />
+                <kbd className="absolute right-2 font-mono text-[9px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border group-hover:text-foreground group-hover:border-foreground/30 transition-colors">
+                  ⌘K
+                </kbd>
               </div>
             </div>
 
@@ -820,6 +829,12 @@ export function AppShell({ children }: AppShellProps) {
             </div>
           </div>
         )}
+
+        {/* Global Command Console (⌘K / Ctrl+K) */}
+        <CommandPalette
+          open={isCommandPaletteOpen}
+          onOpenChange={setIsCommandPaletteOpen}
+        />
       </SidebarProvider>
     </PersonaContext.Provider>
   );
