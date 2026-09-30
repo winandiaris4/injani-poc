@@ -25,7 +25,7 @@ Panduan arsitektur dan langkah demi langkah untuk mendeploy **Injani BPA & Conti
         |
         v  HTTP (127.0.0.1:3000)
 [ Docker Container: injani-platform ]
-  • Node.js 20 Alpine (Standalone)
+  • Node.js 20 Bookworm-slim (Standalone)
   • Healthcheck aktif setiap 30s
   • Logging berbatas (max 10MB x 3 file)
 ```
