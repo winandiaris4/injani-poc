@@ -31,6 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PersonaContext } from "@/components/layout/AppShell";
+import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 
 interface DepartmentMetric {
   dept: string;
@@ -153,6 +154,11 @@ export default function InsightsPage() {
   const { persona, profile } = React.useContext(PersonaContext);
   const [timeframe, setTimeframe] = useState<"7d" | "30d" | "q3">("30d");
   const [hoveredPoint, setHoveredPoint] = useState<number>(5); // default W39 (Curr)
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // SVG Area Spline Calculations
   const baselineY = 120;
@@ -268,8 +274,8 @@ export default function InsightsPage() {
               Average Cycle Time
             </span>
             <div className="flex items-baseline justify-between pt-1">
-              <span className="text-2xl font-bold font-mono text-foreground tracking-tight">
-                2.4 Days
+              <span className="text-2xl font-bold font-mono text-foreground tracking-tight flex items-baseline gap-1">
+                <AnimatedCounter value={2.4} decimals={1} /> <span>Days</span>
               </span>
               <span className="flex items-center text-[11px] font-mono text-emerald-600 font-medium">
                 <ArrowDownRight className="size-3 mr-0.5" /> 18% MoM
@@ -289,7 +295,7 @@ export default function InsightsPage() {
             </span>
             <div className="flex items-baseline justify-between pt-1">
               <span className="text-2xl font-bold font-mono text-foreground tracking-tight">
-                91.8%
+                <AnimatedCounter value={91.8} decimals={1} suffix="%" />
               </span>
               <span className="flex items-center text-[11px] font-mono text-emerald-600 font-medium">
                 +1.8% delta
@@ -311,8 +317,8 @@ export default function InsightsPage() {
               <span className="size-1.5 rounded-full bg-rose-500 animate-pulse" />
             </div>
             <div className="flex items-baseline justify-between pt-1">
-              <span className="text-2xl font-bold font-mono text-foreground tracking-tight">
-                1 Stage
+              <span className="text-2xl font-bold font-mono text-foreground tracking-tight flex items-baseline gap-1">
+                <AnimatedCounter value={1} /> <span>Stage</span>
               </span>
               <span className="text-[11px] font-mono text-rose-600 font-medium">
                 IT Sec (3.9d)
@@ -332,10 +338,10 @@ export default function InsightsPage() {
             </span>
             <div className="flex items-baseline justify-between pt-1">
               <span className="text-2xl font-bold font-mono text-foreground tracking-tight">
-                84.6%
+                <AnimatedCounter value={84.6} decimals={1} suffix="%" />
               </span>
-              <span className="flex items-center text-[11px] font-mono text-foreground font-medium">
-                1,420 runs
+              <span className="flex items-center text-[11px] font-mono text-foreground font-medium gap-1">
+                <AnimatedCounter value={1420} /> <span>runs</span>
               </span>
             </div>
           </CardHeader>
@@ -434,7 +440,7 @@ export default function InsightsPage() {
                 </text>
 
                 {/* Total Throughput Area & Smooth Line */}
-                <path d={throughputAreaPath} fill="url(#throughputAreaGrad)" />
+                <path d={throughputAreaPath} fill="url(#throughputAreaGrad)" className="animate-fade-area" />
                 <path
                   d={throughputLinePath}
                   fill="none"
@@ -442,11 +448,11 @@ export default function InsightsPage() {
                   strokeWidth="2.2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-foreground"
+                  className="text-foreground animate-draw-spline"
                 />
 
                 {/* Breach Area & Line */}
-                <path d={breachAreaPath} fill="url(#breachAreaGrad)" />
+                <path d={breachAreaPath} fill="url(#breachAreaGrad)" className="animate-fade-area" />
                 <path
                   d={breachLinePath}
                   fill="none"
@@ -455,6 +461,7 @@ export default function InsightsPage() {
                   strokeDasharray="4 2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  className="animate-draw-spline"
                 />
 
                 {/* Vertical Crosshair Line on Hovered Point */}
@@ -488,7 +495,8 @@ export default function InsightsPage() {
                         cx={pt.x}
                         cy={pt.y}
                         r={isHovered ? 4.5 : 3}
-                        className={isHovered ? "fill-foreground stroke-background stroke-2" : "fill-foreground"}
+                        className={`${isHovered ? "fill-foreground stroke-background stroke-2" : "fill-foreground"} animate-pop-marker`}
+                        style={{ animationDelay: `${200 + idx * 50}ms` }}
                       />
                       {isHovered && (
                         <circle
@@ -564,7 +572,7 @@ export default function InsightsPage() {
             </span>
           </CardHeader>
           <CardContent className="space-y-3.5">
-            {reviewStageBottlenecks.map((item) => (
+            {reviewStageBottlenecks.map((item, idx) => (
               <div key={item.stage} className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
@@ -586,8 +594,11 @@ export default function InsightsPage() {
                 </div>
                 <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                   <div
-                    style={{ width: item.barWidth }}
-                    className={`h-full rounded-full transition-all ${
+                    style={{
+                      width: mounted ? item.barWidth : "0%",
+                      transition: `width 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${150 + idx * 100}ms`,
+                    }}
+                    className={`h-full rounded-full ${
                       item.status === "critical"
                         ? "bg-rose-500"
                         : item.status === "warning"
