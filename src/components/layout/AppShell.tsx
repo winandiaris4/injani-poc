@@ -316,15 +316,46 @@ function AppShellInner({ children }: AppShellProps) {
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [globalToast, setGlobalToast] = useState<string | null>(null);
   const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
   const notificationRef = React.useRef<HTMLDivElement>(null);
   const { setOnActionTrigger } = useAnnotation();
 
+  const showGlobalToast = (msg: string) => {
+    setGlobalToast(msg);
+    setTimeout(() => setGlobalToast(null), 4000);
+  };
+
+  const personaRef = React.useRef<PersonaType>(persona);
+  React.useEffect(() => {
+    personaRef.current = persona;
+  }, [persona]);
+
   // Wire up annotation action triggers
   React.useEffect(() => {
     return setOnActionTrigger((actionType: string, payload?: string) => {
-      if (actionType === "switch_persona" && payload) {
-        setPersona(payload as PersonaType);
+      if (actionType === "switch_persona") {
+        const current = personaRef.current;
+        const target: PersonaType =
+          payload && payload !== current
+            ? (payload as PersonaType)
+            : current === "control_owner"
+            ? "approver"
+            : "control_owner";
+
+        setPersona(target);
+
+        const targetProfile = PERSONA_PROFILES[target];
+        showGlobalToast(
+          `Perspective switched to ${targetProfile.roleTitle} (${targetProfile.name}) — 2x2 cockpit rearranged!`
+        );
+
+        setTimeout(() => {
+          const banner = document.getElementById("persona-context-banner");
+          if (banner) {
+            banner.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 50);
       }
       if (actionType === "scroll_radar") {
         const el = document.getElementById(payload || "compliance-radar");
@@ -855,6 +886,14 @@ function AppShellInner({ children }: AppShellProps) {
                 </Button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Floating Global Toast Notification */}
+        {globalToast && (
+          <div className="fixed top-16 right-6 z-50 flex items-center gap-2 rounded-lg border border-border bg-foreground text-background px-4 py-2.5 text-xs shadow-2xl animate-in fade-in slide-in-from-top-2 duration-150">
+            <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+            <span className="font-medium">{globalToast}</span>
           </div>
         )}
 

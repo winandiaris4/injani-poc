@@ -658,7 +658,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Persona Context Banner (Live Transformative Feedback) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-card px-4 py-2.5 text-xs border border-border shadow-2xs">
+      <div
+        id="persona-context-banner"
+        className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-card px-4 py-2.5 text-xs border border-border shadow-2xs scroll-mt-20"
+      >
         <div className="flex items-center gap-2.5">
           <div className="flex size-6 items-center justify-center rounded-md bg-foreground text-background font-mono text-[10px] font-bold">
             {persona === "approver" && "AW"}

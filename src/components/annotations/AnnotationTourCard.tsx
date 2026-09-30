@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAnnotation } from "@/contexts/AnnotationContext";
 import { CHALLENGE_ANNOTATIONS } from "@/data/challengeAnnotations";
+import { PersonaContext } from "@/components/layout/AppShell";
 
 export const AnnotationTourCard: React.FC = () => {
   const {
@@ -25,6 +26,17 @@ export const AnnotationTourCard: React.FC = () => {
     openPin,
     executeAnnotationAction,
   } = useAnnotation();
+  const { persona } = React.useContext(PersonaContext);
+
+  const dynamicActionLabel = React.useMemo(() => {
+    if (activeAnnotation?.id === "key-3") {
+      if (persona === "control_owner") {
+        return "Toggle Back to Approver (Aris Winandi)";
+      }
+      return "Simulate Switch to Control Owner (Budi Santoso)";
+    }
+    return activeAnnotation?.actionLabel;
+  }, [activeAnnotation, persona]);
 
   if (!activeAnnotation) return null;
 
@@ -118,7 +130,7 @@ export const AnnotationTourCard: React.FC = () => {
             className="w-full h-8 gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs shadow-xs cursor-pointer"
           >
             <Zap className="size-3.5 fill-white text-white" />
-            <span>{activeAnnotation.actionLabel}</span>
+            <span>{dynamicActionLabel}</span>
           </Button>
         </div>
       )}
