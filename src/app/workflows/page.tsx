@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { mockWorkflowCatalog, mockCronSchedules, mockUserRequests, UserSubmittedRequest } from "@/data/mockData";
 import { PersonaContext } from "@/components/layout/AppShell";
+import { RequestInitiationDialog } from "@/components/workflows/RequestInitiationDialog";
 
 export default function WorkflowsPage() {
   const { persona, profile } = React.useContext(PersonaContext);
@@ -40,6 +41,29 @@ export default function WorkflowsPage() {
   const [trackerSearch, setTrackerSearch] = useState("");
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>("REQ-2026-881");
   const [myRequests, setMyRequests] = useState<UserSubmittedRequest[]>(mockUserRequests);
+
+  // Smart Request Initiation Dialog State
+  const [isInitiationDialogOpen, setIsInitiationDialogOpen] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+
+  const handleOpenInitiation = (templateId?: string) => {
+    setSelectedTemplateId(templateId || null);
+    setIsInitiationDialogOpen(true);
+  };
+
+  const handleNewRequestSubmitted = (newReq: UserSubmittedRequest) => {
+    setMyRequests((prev) => [newReq, ...prev]);
+    setModuleView("tracker");
+    setExpandedRequestId(newReq.id);
+    showToast(`Request ${newReq.id} submitted successfully to approval chain!`);
+  };
+
+  const handleSaveDraft = (draftReq: UserSubmittedRequest) => {
+    setMyRequests((prev) => [draftReq, ...prev]);
+    setModuleView("tracker");
+    setExpandedRequestId(draftReq.id);
+    showToast(`Request saved to drafts (${draftReq.id}).`);
+  };
 
   // Sync smart defaults when persona changes
   React.useEffect(() => {
@@ -154,11 +178,14 @@ export default function WorkflowsPage() {
             </button>
           </div>
 
-          {moduleView === "catalog" && (
-            <Button size="sm" variant="default" className="text-xs gap-1.5 h-8">
-              <Plus className="size-3.5" /> New Template
-            </Button>
-          )}
+          <Button
+            size="sm"
+            variant="default"
+            onClick={() => handleOpenInitiation()}
+            className="text-xs gap-1.5 h-8 font-medium shadow-2xs"
+          >
+            <Plus className="size-3.5" /> Initiate Request
+          </Button>
         </div>
       </div>
 
@@ -268,7 +295,7 @@ export default function WorkflowsPage() {
                         size="sm"
                         variant="outline"
                         className="w-full text-xs h-8 gap-1.5 font-medium hover:bg-accent text-foreground"
-                        onClick={() => showToast(`Initiation form loaded for: ${wf.name}`)}
+                        onClick={() => handleOpenInitiation(wf.id)}
                       >
                         <Play className="size-3 fill-current" /> Start Request
                       </Button>
@@ -723,6 +750,15 @@ export default function WorkflowsPage() {
           </div>
         </div>
       )}
+
+      {/* Smart Request Initiation Form Dialog */}
+      <RequestInitiationDialog
+        open={isInitiationDialogOpen}
+        onOpenChange={setIsInitiationDialogOpen}
+        initialTemplateId={selectedTemplateId}
+        onSubmitRequest={handleNewRequestSubmitted}
+        onSaveDraft={handleSaveDraft}
+      />
     </div>
   );
 }
