@@ -221,7 +221,31 @@ flowchart TD
 
 ---
 
-## 7. Conclusion
+## 7. Prototype Boundaries, Design Trade-Offs & Ideal Production System
+
+To ensure full transparency between the current prototype and the target enterprise production deployment:
+
+### 7.1 Scope Boundaries & Prototype Trade-Offs
+1. **Persona Lens vs. Multi-Tenant SSO**: The prototype implements client-side **Persona Presets** (Approver, Requester, Control Owner, Automation Owner) rather than a rigid multi-user login wall. This empowers reviewers to evaluate all 4 user mental models in under 5 minutes without the friction of repeated logout/login cycles.
+2. **Optimistic Client State & LocalStorage**: Data mutations (approvals, form submissions, notification states) execute optimistically in client state with `localStorage` persistence, ensuring zero network latency and resilient offline demonstration.
+3. **Simulated Ingress Triggers**: Cron and webhook triggers are driven via interactive buttons (`[▶ Run Now]`) and local event dispatches rather than public webhook listeners.
+4. **Deterministic Client Hashing**: Cryptographic SHA-256 verification certificates are computed deterministically via Web Crypto APIs, ready to be backed by Cloud KMS / HSM in production.
+
+### 7.2 Ideal Production Architecture (Phase 3+ Target)
+
+| Architectural Dimension | Current Prototype (Phase 2) | Target Enterprise System (Phase 3+) |
+| :--- | :--- | :--- |
+| **Identity & Access (IAM)** | Persona Presets (Client simulation) | **Enterprise SSO** (SAML 2.0 / Okta / Azure AD) + MFA + SCIM User Provisioning |
+| **Authorization Model** | Dynamic Policy Engine (`SmartRequestForm`) | **Full RBAC + ABAC + Segregation of Duties (SoD)**: Enforced via Next.js Middleware & Open Policy Agent (OPA) |
+| **Data Layer & Isolation** | In-Memory Mock Data + LocalStorage | **PostgreSQL 16 Cluster** with **Row-Level Security (RLS)** & Monthly Partitioning (`poc-injani/q4`) |
+| **Event & Ingress Gateway** | Mock Event Dispatcher + UI Triggers | **Distributed API Gateway** + Webhook HMAC Signatures + Google Cloud Tasks (`poc-injani/q3`) |
+| **Async Processing** | Synchronous Client State Updates | **Distributed Worker Pool** (Python Arq + Redis Idempotency Locks) (`poc-injani/q6`) |
+| **Document Ingestion** | Manual Form Input + Dynamic Checks | **AI Document Pipeline** via FastAPI + Structured LLM Extraction (`poc-injani/q1`) |
+| **Audit & Legal Compliance** | SHA-256 Audit Certificate Modal | **Immutable Audit Ledger** (WORM Append-Only storage) + Cloud KMS Digital Signatures |
+
+---
+
+## 8. Conclusion
 
 The Injani Platform prototype demonstrates that enterprise governance does not have to be cumbersome. By combining:
 - A rigorous **5-module Information Architecture**,
@@ -230,3 +254,4 @@ The Injani Platform prototype demonstrates that enterprise governance does not h
 - **Production-grade Docker deployment engineering**,
 
 Injani delivers a system that empowers operators to resolve urgent SLA emergencies in seconds while maintaining bulletproof, audit-ready compliance across the organization.
+
