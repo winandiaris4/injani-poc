@@ -41,6 +41,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { initialApprovals, ApprovalItem } from "@/data/mockData";
 import { PersonaContext } from "@/components/layout/AppShell";
 import Link from "next/link";
+import { AnnotationPin } from "@/components/annotations/AnnotationPin";
+import { useAnnotation } from "@/contexts/AnnotationContext";
 
 const DELEGATEE_OPTIONS = [
   {
@@ -93,6 +95,19 @@ export default function InboxPage() {
   const [filterPriority, setFilterPriority] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { setOnActionTrigger } = useAnnotation();
+
+  // Listen to annotation actions (e.g. Key 4 Open Slide-Over Batch Drawer)
+  React.useEffect(() => {
+    return setOnActionTrigger((actionType: string, payload?: string) => {
+      if (actionType === "open_drawer") {
+        setViewMode("split");
+        if (payload === "first" && approvals.length > 0) {
+          setSelectedApproval(approvals[0]);
+        }
+      }
+    });
+  }, [setOnActionTrigger, approvals]);
 
   // Delegation Modal State
   const [isDelegationModalOpen, setIsDelegationModalOpen] = useState(false);
@@ -230,6 +245,7 @@ export default function InboxPage() {
             <span className="font-mono text-xs px-2 py-0.5 rounded-xs bg-muted text-foreground font-medium">
               {approvals.length} pending
             </span>
+            <AnnotationPin pinId="key-4" label="Key 4: Approver UX" />
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
             Rapid triage of multi-tier operational sign-offs with batch selection and audit preservation.

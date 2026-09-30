@@ -36,6 +36,9 @@ import {
 } from "@/components/ui/table";
 import { mockControls, ControlItem, mockCronSchedules, CronScheduleItem } from "@/data/mockData";
 import { PersonaContext } from "@/components/layout/AppShell";
+import { AnnotationPin } from "@/components/annotations/AnnotationPin";
+import { useAnnotation } from "@/contexts/AnnotationContext";
+import { AuditCertificateModal } from "@/components/compliance/AuditCertificateModal";
 
 export default function CompliancePage() {
   const { persona, profile } = React.useContext(PersonaContext);
@@ -67,6 +70,17 @@ export default function CompliancePage() {
 
   // Toast Feedback
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+  const { setOnActionTrigger } = useAnnotation();
+
+  // Listen to annotation triggers (e.g. Key 5 View Cryptographic Certificate)
+  React.useEffect(() => {
+    return setOnActionTrigger((actionType: string) => {
+      if (actionType === "open_cert") {
+        setIsCertModalOpen(true);
+      }
+    });
+  }, [setOnActionTrigger]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -155,6 +169,7 @@ export default function CompliancePage() {
             <span className="font-mono text-[10px] bg-muted text-muted-foreground border border-border px-1.5 py-0.5 rounded uppercase">
               {complianceView === "controls" ? "Governance Registry" : "Recurring Sweeps"}
             </span>
+            <AnnotationPin pinId="key-5" label="Key 5: Governance" />
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
             {complianceView === "controls"
@@ -645,6 +660,12 @@ export default function CompliancePage() {
           </div>
         </div>
       )}
+
+      {/* Cryptographic SHA-256 Compliance Certificate Modal */}
+      <AuditCertificateModal
+        open={isCertModalOpen}
+        onOpenChange={setIsCertModalOpen}
+      />
     </div>
   );
 }

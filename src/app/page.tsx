@@ -38,6 +38,7 @@ import { PersonaContext, PersonaType } from "@/components/layout/AppShell";
 import { initialApprovals, mockControls, mockCronSchedules, mockUserRequests } from "@/data/mockData";
 import { SlaVelocityChart } from "@/components/charts/SlaVelocityChart";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
+import { AnnotationPin } from "@/components/annotations/AnnotationPin";
 
 export default function DashboardPage() {
   const { persona } = useContext(PersonaContext);
@@ -232,7 +233,7 @@ export default function DashboardPage() {
 
   // WIDGET 3: CONTINUOUS CONTROLS HEALTH RADAR
   const renderControlsWidget = (badgeLabel?: string) => (
-    <Card key="controls" className="border-border shadow-2xs">
+    <Card key="controls" id="compliance-radar" className="border-border shadow-2xs scroll-mt-16">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <div>
           <div className="flex items-center gap-2">
@@ -614,6 +615,7 @@ export default function DashboardPage() {
                 <span className="text-[10px] font-mono text-zinc-300 border border-zinc-800 px-1.5 py-0.5 rounded bg-zinc-900/80">
                   Continuous Urgency
                 </span>
+                <AnnotationPin pinId="key-2" label="Key 2: Fire Alarm" />
               </div>
               <div className="flex flex-wrap items-center gap-3 text-xs">
                 <Link
@@ -670,6 +672,7 @@ export default function DashboardPage() {
               <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-muted text-muted-foreground border border-border">
                 {roleTag}
               </span>
+              <AnnotationPin pinId="key-3" label="Key 3: Customization" />
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">{roleMission}</p>
           </div>

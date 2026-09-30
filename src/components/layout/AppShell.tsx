@@ -45,6 +45,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CommandPalette } from "@/components/layout/CommandPalette";
+import { AnnotationProvider, useAnnotation } from "@/contexts/AnnotationContext";
+import { AnnotationHeaderToggle } from "@/components/annotations/AnnotationHeaderToggle";
+import { AnnotationPin } from "@/components/annotations/AnnotationPin";
+import { AnnotationTourCard } from "@/components/annotations/AnnotationTourCard";
+import { EvaluationWelcomeModal } from "@/components/annotations/EvaluationWelcomeModal";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -305,7 +310,7 @@ export const INITIAL_NOTIFICATIONS: AppNotification[] = [
   },
 ];
 
-export function AppShell({ children }: AppShellProps) {
+function AppShellInner({ children }: AppShellProps) {
   const pathname = usePathname();
   const [persona, setPersonaState] = useState<PersonaType>("approver");
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
@@ -313,6 +318,22 @@ export function AppShell({ children }: AppShellProps) {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
   const notificationRef = React.useRef<HTMLDivElement>(null);
+  const { setOnActionTrigger } = useAnnotation();
+
+  // Wire up annotation action triggers
+  React.useEffect(() => {
+    return setOnActionTrigger((actionType: string, payload?: string) => {
+      if (actionType === "switch_persona" && payload) {
+        setPersona(payload as PersonaType);
+      }
+      if (actionType === "scroll_radar") {
+        const el = document.getElementById(payload || "compliance-radar");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    });
+  }, [setOnActionTrigger]);
 
   const navItems = getNavItems(persona);
 
@@ -399,8 +420,9 @@ export function AppShell({ children }: AppShellProps) {
           {/* Navigation Menu */}
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground">
-                Modules
+              <SidebarGroupLabel className="text-[10px] font-medium tracking-wider uppercase text-muted-foreground flex items-center justify-between pr-2">
+                <span>Modules</span>
+                <AnnotationPin pinId="key-1" label="IA" />
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
@@ -519,6 +541,8 @@ export function AppShell({ children }: AppShellProps) {
             </div>
 
             <div className="flex items-center gap-2">
+              <AnnotationHeaderToggle />
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -830,6 +854,12 @@ export function AppShell({ children }: AppShellProps) {
           </div>
         )}
 
+        {/* Floating Interactive Architecture Tour Card */}
+        <AnnotationTourCard />
+
+        {/* Evaluation Welcome Modal */}
+        <EvaluationWelcomeModal />
+
         {/* Global Command Console (⌘K / Ctrl+K) */}
         <CommandPalette
           open={isCommandPaletteOpen}
@@ -837,5 +867,13 @@ export function AppShell({ children }: AppShellProps) {
         />
       </SidebarProvider>
     </PersonaContext.Provider>
+  );
+}
+
+export function AppShell({ children }: AppShellProps) {
+  return (
+    <AnnotationProvider>
+      <AppShellInner>{children}</AppShellInner>
+    </AnnotationProvider>
   );
 }
