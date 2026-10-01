@@ -26,6 +26,14 @@ interface AnnotationContextType {
 
 const AnnotationContext = createContext<AnnotationContextType | undefined>(undefined);
 
+const trackEvent = (event: string) => {
+  try {
+    if (typeof window !== "undefined") {
+      fetch(`/api/track?event=${encodeURIComponent(event)}`, { method: "GET", keepalive: true }).catch(() => {});
+    }
+  } catch {}
+};
+
 export const AnnotationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -64,6 +72,7 @@ export const AnnotationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const openPin = (id: string) => {
     setIsAnnotationMode(true);
     setActivePinId(id);
+    trackEvent(`Tour Milestone: ${id}`);
     const ann = CHALLENGE_ANNOTATIONS.find((a) => a.id === id);
     if (ann?.targetPage && pathname !== ann.targetPage) {
       router.push(ann.targetPage);
@@ -111,12 +120,14 @@ export const AnnotationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const startGuidedTour = () => {
+    trackEvent("Started Guided Challenge Tour (Key 1)");
     dismissWelcomeModal();
     setIsAnnotationMode(true);
     openPin(CHALLENGE_ANNOTATIONS[0].id);
   };
 
   const enablePinsOnly = () => {
+    trackEvent("Enabled Pins Only (Free Browse)");
     dismissWelcomeModal();
     setIsAnnotationMode(true);
     setActivePinId(null);
@@ -132,6 +143,7 @@ export const AnnotationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, []);
 
   const executeAnnotationAction = (annotation: ChallengeAnnotation) => {
+    trackEvent(`Action Executed: ${annotation.actionLabel || annotation.id}`);
     listenersRef.current.forEach((cb) => {
       try {
         cb(annotation.actionType || "", annotation.actionPayload);
